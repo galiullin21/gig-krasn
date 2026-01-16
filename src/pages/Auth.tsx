@@ -8,7 +8,6 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Phone } from "lucide-react";
@@ -308,165 +307,179 @@ export default function Auth() {
               </div>
 
               {authMethod === "email" ? (
-                <Tabs defaultValue="login">
+                <Tabs defaultValue="login" key="email-tabs">
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login">Вход</TabsTrigger>
                     <TabsTrigger value="signup">Регистрация</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="login">
-                    <Form {...emailLoginForm}>
-                      <form onSubmit={emailLoginForm.handleSubmit(handleEmailLogin)} className="space-y-4">
-                        <FormField
-                          control={emailLoginForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input placeholder="email@example.com" type="email" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <form onSubmit={emailLoginForm.handleSubmit(handleEmailLogin)} className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="login-email" className="text-sm font-medium leading-none">
+                          Email
+                        </label>
+                        <Input
+                          id="login-email"
+                          placeholder="email@example.com"
+                          type="email"
+                          {...emailLoginForm.register("email")}
                         />
-                        <FormField
-                          control={emailLoginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Пароль</FormLabel>
-                              <FormControl>
-                                <Input placeholder="••••••" type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        {emailLoginForm.formState.errors.email && (
+                          <p className="text-sm font-medium text-destructive">
+                            {emailLoginForm.formState.errors.email.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="login-password" className="text-sm font-medium leading-none">
+                          Пароль
+                        </label>
+                        <Input
+                          id="login-password"
+                          placeholder="••••••"
+                          type="password"
+                          {...emailLoginForm.register("password")}
                         />
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Войти
-                        </Button>
-                      </form>
-                    </Form>
+                        {emailLoginForm.formState.errors.password && (
+                          <p className="text-sm font-medium text-destructive">
+                            {emailLoginForm.formState.errors.password.message}
+                          </p>
+                        )}
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Войти
+                      </Button>
+                    </form>
                   </TabsContent>
 
                   <TabsContent value="signup">
-                    <Form {...emailSignupForm}>
-                      <form onSubmit={emailSignupForm.handleSubmit(handleEmailSignup)} className="space-y-4">
-                        <FormField
-                          control={emailSignupForm.control}
-                          name="fullName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Имя</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Иван Иванов" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <form onSubmit={emailSignupForm.handleSubmit(handleEmailSignup)} className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="signup-name" className="text-sm font-medium leading-none">
+                          Имя
+                        </label>
+                        <Input
+                          id="signup-name"
+                          placeholder="Иван Иванов"
+                          {...emailSignupForm.register("fullName")}
                         />
-                        <FormField
-                          control={emailSignupForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input placeholder="email@example.com" type="email" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        {emailSignupForm.formState.errors.fullName && (
+                          <p className="text-sm font-medium text-destructive">
+                            {emailSignupForm.formState.errors.fullName.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="signup-email" className="text-sm font-medium leading-none">
+                          Email
+                        </label>
+                        <Input
+                          id="signup-email"
+                          placeholder="email@example.com"
+                          type="email"
+                          {...emailSignupForm.register("email")}
                         />
-                        <FormField
-                          control={emailSignupForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Пароль</FormLabel>
-                              <FormControl>
-                                <Input placeholder="••••••" type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        {emailSignupForm.formState.errors.email && (
+                          <p className="text-sm font-medium text-destructive">
+                            {emailSignupForm.formState.errors.email.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="signup-password" className="text-sm font-medium leading-none">
+                          Пароль
+                        </label>
+                        <Input
+                          id="signup-password"
+                          placeholder="••••••"
+                          type="password"
+                          {...emailSignupForm.register("password")}
                         />
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Зарегистрироваться
-                        </Button>
-                      </form>
-                    </Form>
+                        {emailSignupForm.formState.errors.password && (
+                          <p className="text-sm font-medium text-destructive">
+                            {emailSignupForm.formState.errors.password.message}
+                          </p>
+                        )}
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Зарегистрироваться
+                      </Button>
+                    </form>
                   </TabsContent>
                 </Tabs>
               ) : phoneStep === "phone" ? (
-                <Tabs defaultValue="login">
+                <Tabs defaultValue="login" key="phone-tabs">
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login">Вход</TabsTrigger>
                     <TabsTrigger value="signup">Регистрация</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="login">
-                    <Form {...phoneLoginForm}>
-                      <form onSubmit={phoneLoginForm.handleSubmit(handlePhoneLogin)} className="space-y-4">
-                        <FormField
-                          control={phoneLoginForm.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Номер телефона</FormLabel>
-                              <FormControl>
-                                <Input placeholder="+7 999 123-45-67" type="tel" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <form onSubmit={phoneLoginForm.handleSubmit(handlePhoneLogin)} className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="phone-login" className="text-sm font-medium leading-none">
+                          Номер телефона
+                        </label>
+                        <Input
+                          id="phone-login"
+                          placeholder="+7 999 123-45-67"
+                          type="tel"
+                          {...phoneLoginForm.register("phone")}
                         />
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Получить код
-                        </Button>
-                      </form>
-                    </Form>
+                        {phoneLoginForm.formState.errors.phone && (
+                          <p className="text-sm font-medium text-destructive">
+                            {phoneLoginForm.formState.errors.phone.message}
+                          </p>
+                        )}
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Получить код
+                      </Button>
+                    </form>
                   </TabsContent>
 
                   <TabsContent value="signup">
-                    <Form {...phoneSignupForm}>
-                      <form onSubmit={phoneSignupForm.handleSubmit(handlePhoneSignup)} className="space-y-4">
-                        <FormField
-                          control={phoneSignupForm.control}
-                          name="fullName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Имя</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Иван Иванов" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <form onSubmit={phoneSignupForm.handleSubmit(handlePhoneSignup)} className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="phone-signup-name" className="text-sm font-medium leading-none">
+                          Имя
+                        </label>
+                        <Input
+                          id="phone-signup-name"
+                          placeholder="Иван Иванов"
+                          {...phoneSignupForm.register("fullName")}
                         />
-                        <FormField
-                          control={phoneSignupForm.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Номер телефона</FormLabel>
-                              <FormControl>
-                                <Input placeholder="+7 999 123-45-67" type="tel" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        {phoneSignupForm.formState.errors.fullName && (
+                          <p className="text-sm font-medium text-destructive">
+                            {phoneSignupForm.formState.errors.fullName.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="phone-signup" className="text-sm font-medium leading-none">
+                          Номер телефона
+                        </label>
+                        <Input
+                          id="phone-signup"
+                          placeholder="+7 999 123-45-67"
+                          type="tel"
+                          {...phoneSignupForm.register("phone")}
                         />
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Получить код
-                        </Button>
-                      </form>
-                    </Form>
+                        {phoneSignupForm.formState.errors.phone && (
+                          <p className="text-sm font-medium text-destructive">
+                            {phoneSignupForm.formState.errors.phone.message}
+                          </p>
+                        )}
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Получить код
+                      </Button>
+                    </form>
                   </TabsContent>
                 </Tabs>
               ) : (
