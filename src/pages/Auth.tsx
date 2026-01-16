@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Phone } from "lucide-react";
+import { Loader2, Mail, Phone, ArrowLeft } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const emailLoginSchema = z.object({
@@ -33,10 +33,26 @@ const phoneSignupSchema = z.object({
   fullName: z.string().min(2, "Введите ваше имя"),
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email("Введите корректный email"),
+});
+
+const newPasswordSchema = z.object({
+  password: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
+  confirmPassword: z.string().min(6, "Подтвердите пароль"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Пароли не совпадают",
+  path: ["confirmPassword"],
+});
+
 type EmailLoginFormData = z.infer<typeof emailLoginSchema>;
 type EmailSignupFormData = z.infer<typeof emailSignupSchema>;
 type PhoneFormData = z.infer<typeof phoneSchema>;
 type PhoneSignupFormData = z.infer<typeof phoneSignupSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
+
+const RESEND_COOLDOWN = 60; // seconds
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +60,9 @@ export default function Auth() {
   const [phoneStep, setPhoneStep] = useState<"phone" | "otp">("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -67,23 +86,53 @@ export default function Auth() {
     defaultValues: { phone: "", fullName: "" },
   });
 
+  const resetPasswordForm = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { email: "" },
+  });
+
+  const newPasswordForm = useForm<NewPasswordFormData>({
+    resolver: zodResolver(newPasswordSchema),
+    defaultValues: { password: "", confirmPassword: "" },
+  });
+
+  // Countdown timer for SMS resend
   useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCountdown]);
+
+  // Check for password recovery event
+  useEffect(() => {
+    // Check URL hash for recovery token on mount
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      setShowNewPassword(true);
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session?.user) {
+        if (session?.user && !showNewPassword) {
           navigate("/");
         }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
+      if (session?.user && !showNewPassword) {
         navigate("/");
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const startResendCooldown = useCallback(() => {
+    setResendCountdown(RESEND_COOLDOWN);
+  }, []);
 
   const handleEmailLogin = async (data: EmailLoginFormData) => {
     setIsLoading(true);
@@ -156,6 +205,74 @@ export default function Auth() {
     }
   };
 
+  const handleResetPassword = async (data: ResetPasswordFormData) => {
+    setIsLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/auth`;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: error.message,
+        });
+        return;
+      }
+
+      toast({
+        title: "Проверьте почту",
+        description: "Мы отправили письмо со ссылкой для сброса пароля",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Произошла непредвиденная ошибка",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNewPassword = async (data: NewPasswordFormData) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: data.password,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: error.message,
+        });
+        return;
+      }
+
+      toast({
+        title: "Пароль изменён",
+        description: "Вы можете войти с новым паролем",
+      });
+      
+      setShowNewPassword(false);
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Произошла непредвиденная ошибка",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePhoneLogin = async (data: PhoneFormData) => {
     setIsLoading(true);
     try {
@@ -176,6 +293,7 @@ export default function Auth() {
 
       setPhoneNumber(formattedPhone);
       setPhoneStep("otp");
+      startResendCooldown();
       toast({
         title: "Код отправлен",
         description: "Введите код из SMS",
@@ -214,9 +332,44 @@ export default function Auth() {
 
       setPhoneNumber(formattedPhone);
       setPhoneStep("otp");
+      startResendCooldown();
       toast({
         title: "Код отправлен",
         description: "Введите код из SMS",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Произошла непредвиденная ошибка",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCountdown > 0) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: phoneNumber,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: error.message,
+        });
+        return;
+      }
+
+      startResendCooldown();
+      toast({
+        title: "Код отправлен повторно",
+        description: "Проверьте SMS",
       });
     } catch (error) {
       toast({
@@ -267,6 +420,119 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  // New password form (after clicking reset link)
+  if (showNewPassword) {
+    return (
+      <Layout>
+        <div className="container py-12">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-condensed">Новый пароль</CardTitle>
+                <CardDescription>
+                  Введите новый пароль для вашего аккаунта
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={newPasswordForm.handleSubmit(handleNewPassword)} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="new-password" className="text-sm font-medium leading-none">
+                      Новый пароль
+                    </label>
+                    <Input
+                      id="new-password"
+                      placeholder="••••••"
+                      type="password"
+                      {...newPasswordForm.register("password")}
+                    />
+                    {newPasswordForm.formState.errors.password && (
+                      <p className="text-sm font-medium text-destructive">
+                        {newPasswordForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="confirm-password" className="text-sm font-medium leading-none">
+                      Подтвердите пароль
+                    </label>
+                    <Input
+                      id="confirm-password"
+                      placeholder="••••••"
+                      type="password"
+                      {...newPasswordForm.register("confirmPassword")}
+                    />
+                    {newPasswordForm.formState.errors.confirmPassword && (
+                      <p className="text-sm font-medium text-destructive">
+                        {newPasswordForm.formState.errors.confirmPassword.message}
+                      </p>
+                    )}
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Сохранить пароль
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Reset password form
+  if (showResetPassword) {
+    return (
+      <Layout>
+        <div className="container py-12">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-condensed">Сброс пароля</CardTitle>
+                <CardDescription>
+                  Введите email для получения ссылки на сброс пароля
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="reset-email" className="text-sm font-medium leading-none">
+                      Email
+                    </label>
+                    <Input
+                      id="reset-email"
+                      placeholder="email@example.com"
+                      type="email"
+                      {...resetPasswordForm.register("email")}
+                    />
+                    {resetPasswordForm.formState.errors.email && (
+                      <p className="text-sm font-medium text-destructive">
+                        {resetPasswordForm.formState.errors.email.message}
+                      </p>
+                    )}
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Отправить ссылку
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setShowResetPassword(false)}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Вернуться к входу
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -350,6 +616,14 @@ export default function Auth() {
                       <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Войти
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="w-full text-sm"
+                        onClick={() => setShowResetPassword(true)}
+                      >
+                        Забыли пароль?
                       </Button>
                     </form>
                   </TabsContent>
@@ -509,10 +783,28 @@ export default function Auth() {
                   </Button>
 
                   <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleResendCode}
+                    disabled={resendCountdown > 0 || isLoading}
+                  >
+                    {resendCountdown > 0 ? (
+                      `Отправить повторно (${resendCountdown}с)`
+                    ) : (
+                      "Отправить код повторно"
+                    )}
+                  </Button>
+
+                  <Button
                     variant="ghost"
                     className="w-full"
-                    onClick={() => setPhoneStep("phone")}
+                    onClick={() => {
+                      setPhoneStep("phone");
+                      setOtpCode("");
+                      setResendCountdown(0);
+                    }}
                   >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
                     Изменить номер
                   </Button>
                 </div>
