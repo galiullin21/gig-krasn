@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles([]);
   };
 
-  const isAdmin = roles.includes("admin");
+  const isAdmin = roles.includes("admin") || roles.includes("developer");
   const isEditor = roles.includes("editor") || isAdmin;
   const isDeveloper = roles.includes("developer");
 
