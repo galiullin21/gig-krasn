@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/admin/ImageUpload";
-import { Save, Globe, Phone, Mail, MapPin } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Save, Globe, Phone, Mail, MapPin, Shield } from "lucide-react";
 
 interface SiteSettings {
   site_name: string;
@@ -23,6 +25,12 @@ interface SiteSettings {
   social_telegram: string;
   social_ok: string;
   footer_text: string;
+  // Auth settings
+  auth_email_enabled: boolean;
+  auth_phone_enabled: boolean;
+  auth_google_enabled: boolean;
+  auth_email_confirm_required: boolean;
+  auth_phone_confirm_required: boolean;
 }
 
 const defaultSettings: SiteSettings = {
@@ -36,11 +44,18 @@ const defaultSettings: SiteSettings = {
   social_telegram: "",
   social_ok: "",
   footer_text: "",
+  // Auth settings defaults
+  auth_email_enabled: true,
+  auth_phone_enabled: true,
+  auth_google_enabled: true,
+  auth_email_confirm_required: true,
+  auth_phone_confirm_required: true,
 };
 
 export default function AdminSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isDeveloper } = useAuth();
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
 
   const { data: savedSettings, isLoading } = useQuery({
@@ -141,6 +156,7 @@ export default function AdminSettings() {
           <TabsTrigger value="general">Основные</TabsTrigger>
           <TabsTrigger value="contacts">Контакты</TabsTrigger>
           <TabsTrigger value="social">Соцсети</TabsTrigger>
+          {isDeveloper && <TabsTrigger value="auth">Авторизация</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
@@ -298,6 +314,96 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isDeveloper && (
+          <TabsContent value="auth" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Настройки авторизации
+                </CardTitle>
+                <CardDescription>
+                  Управление методами входа и регистрации (только для разработчиков)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="font-medium">Методы авторизации</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Email авторизация</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Вход и регистрация через email и пароль
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.auth_email_enabled}
+                      onCheckedChange={(checked) => updateSetting("auth_email_enabled", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Телефон авторизация</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Вход и регистрация через SMS-код
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.auth_phone_enabled}
+                      onCheckedChange={(checked) => updateSetting("auth_phone_enabled", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Google авторизация</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Вход через аккаунт Google
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.auth_google_enabled}
+                      onCheckedChange={(checked) => updateSetting("auth_google_enabled", checked)}
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <h3 className="font-medium">Подтверждение</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Подтверждение Email</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Требовать подтверждение email при регистрации
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.auth_email_confirm_required}
+                      onCheckedChange={(checked) => updateSetting("auth_email_confirm_required", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Подтверждение телефона</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Требовать подтверждение телефона при регистрации
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.auth_phone_confirm_required}
+                      onCheckedChange={(checked) => updateSetting("auth_phone_confirm_required", checked)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
