@@ -113,7 +113,9 @@ export default function AdminBlogForm() {
     setIsSubmitting(true);
     try {
       const payload = {
-        ...data,
+        title: data.title,
+        slug: data.slug,
+        status: data.status,
         category_id: data.category_id || null,
         cover_image: data.cover_image || null,
         content: data.content || null,

@@ -123,7 +123,11 @@ export default function AdminNewsForm() {
     setIsSubmitting(true);
     try {
       const payload = {
-        ...data,
+        title: data.title,
+        slug: data.slug,
+        status: data.status,
+        is_featured: data.is_featured,
+        is_important: data.is_important,
         category_id: data.category_id || null,
         cover_image: data.cover_image || null,
         lead: data.lead || null,
