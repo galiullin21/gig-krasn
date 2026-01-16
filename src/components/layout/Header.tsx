@@ -1,10 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, Cloud, Sun, X } from "lucide-react";
+import { Search, User, Cloud, Sun, X, Crown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { BurgerMenu } from "./BurgerMenu";
+import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Новости", href: "/news" },
@@ -19,6 +28,7 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, profile, isAdmin, isEditor, signOut } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,15 +127,61 @@ export function Header() {
                 <Search className="w-4 h-4" />
               </Button>
             )}
-            <Link to="/auth">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
-              >
-                <User className="w-4 h-4" />
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10 relative"
+                  >
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs bg-primary-foreground/20 text-primary-foreground">
+                        {profile?.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isAdmin && (
+                      <Crown className="absolute -top-1 -right-1 h-3 w-3 text-yellow-400" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/cabinet" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      Личный кабинет
+                    </Link>
+                  </DropdownMenuItem>
+                  {isEditor && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="cursor-pointer">
+                          <Crown className="mr-2 h-4 w-4" />
+                          {isAdmin ? "Админ-панель" : "Редактирование"}
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Выйти
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
+                >
+                  <User className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu */}
@@ -157,14 +213,47 @@ export function Header() {
                     </Link>
                   ))}
                   <hr className="my-2" />
-                  <Link
-                    to="/auth"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
-                  >
-                    <User className="w-5 h-5" />
-                    Личный кабинет
-                  </Link>
+                  {user ? (
+                    <>
+                      <Link
+                        to="/cabinet"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        <User className="w-5 h-5" />
+                        Личный кабинет
+                      </Link>
+                      {isEditor && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
+                        >
+                          <Crown className="w-5 h-5" />
+                          {isAdmin ? "Админ-панель" : "Редактирование"}
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setIsMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2 text-lg font-medium text-destructive hover:opacity-80 transition-colors"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        Выйти
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
+                    >
+                      <User className="w-5 h-5" />
+                      Войти
+                    </Link>
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>
