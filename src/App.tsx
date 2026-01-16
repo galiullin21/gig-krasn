@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Cabinet from "./pages/Cabinet";
+import Notifications from "./pages/Notifications";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Blogs from "./pages/Blogs";
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/cabinet" element={<Cabinet />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsDetail />} />
               <Route path="/blogs" element={<Blogs />} />
