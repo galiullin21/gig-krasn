@@ -1,46 +1,48 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-
-interface BlogItem {
-  id: string;
-  title: string;
-  category: string;
-  coverImage: string;
-  slug: string;
-}
-
-const mockBlogs: BlogItem[] = [
-  {
-    id: "1",
-    title: "О смысле жизни и простых радостях",
-    category: "Философия",
-    coverImage: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&h=300&fit=crop",
-    slug: "o-smysle-zhizni",
-  },
-  {
-    id: "2",
-    title: "Как я провел лето в Железногорске",
-    category: "Размышления",
-    coverImage: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    slug: "leto-v-zheleznogorske",
-  },
-  {
-    id: "3",
-    title: "Мой опыт работы в атомной отрасли",
-    category: "Опыт",
-    coverImage: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=400&h=300&fit=crop",
-    slug: "opyt-atomnaya-otrasl",
-  },
-  {
-    id: "4",
-    title: "Воспоминания о старом городе",
-    category: "Размышления",
-    coverImage: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=400&h=300&fit=crop",
-    slug: "vospominaniya-o-gorode",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function BlogsSection() {
+  const { data: blogs, isLoading } = useQuery({
+    queryKey: ["home-blogs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blogs")
+        .select("id, title, cover_image, slug, category_id, categories(name)")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-8">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i}>
+              <Skeleton className="aspect-[4/3] rounded-lg mb-2" />
+              <Skeleton className="h-3 w-16 mb-1" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (!blogs?.length) {
+    return null;
+  }
+
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -55,19 +57,25 @@ export function BlogsSection() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {mockBlogs.map((blog) => (
+        {blogs.map((blog) => (
           <article key={blog.id} className="group">
             <Link to={`/blogs/${blog.slug}`} className="block">
               <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted mb-2">
-                <img
-                  src={blog.coverImage}
-                  alt={blog.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {blog.cover_image ? (
+                  <img
+                    src={blog.cover_image}
+                    alt={blog.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    Нет изображения
+                  </div>
+                )}
               </div>
             </Link>
             <span className="text-xs font-medium text-primary uppercase">
-              {blog.category}
+              {(blog.categories as any)?.name || "Блог"}
             </span>
             <Link to={`/blogs/${blog.slug}`}>
               <h3 className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-primary transition-colors mt-1">

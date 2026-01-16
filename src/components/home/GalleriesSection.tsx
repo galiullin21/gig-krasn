@@ -1,43 +1,44 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Camera } from "lucide-react";
-
-interface GalleryItem {
-  id: string;
-  title: string;
-  coverImage: string;
-  photosCount: number;
-  slug: string;
-  type: "gallery" | "photoreport";
-}
-
-const mockGalleries: GalleryItem[] = [
-  {
-    id: "1",
-    title: "День города 2025: праздничный концерт",
-    coverImage: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&h=400&fit=crop",
-    photosCount: 45,
-    slug: "den-goroda-2025",
-    type: "photoreport",
-  },
-  {
-    id: "2",
-    title: "Зимний Железногорск",
-    coverImage: "https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=600&h=400&fit=crop",
-    photosCount: 28,
-    slug: "zimnij-zheleznogorsk",
-    type: "gallery",
-  },
-  {
-    id: "3",
-    title: "Открытие нового спорткомплекса",
-    coverImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=400&fit=crop",
-    photosCount: 32,
-    slug: "otkrytie-sportkompleksa",
-    type: "photoreport",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function GalleriesSection() {
+  const { data: galleries, isLoading } = useQuery({
+    queryKey: ["home-galleries"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("galleries")
+        .select("id, title, cover_image, slug, type, images")
+        .not("published_at", "is", null)
+        .order("published_at", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-8">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="aspect-[16/10] rounded-lg" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (!galleries?.length) {
+    return null;
+  }
+
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -54,34 +55,45 @@ export function GalleriesSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {mockGalleries.map((gallery) => (
-          <article key={gallery.id} className="group relative">
-            <Link to={`/galleries/${gallery.slug}`} className="block">
-              <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted">
-                <img
-                  src={gallery.coverImage}
-                  alt={gallery.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="flex items-center gap-2 text-white/80 text-xs mb-2">
-                    <Camera className="w-4 h-4" />
-                    <span>{gallery.photosCount} фото</span>
-                    <span className="uppercase">
-                      {gallery.type === "photoreport"
-                        ? "Фоторепортаж"
-                        : "Галерея"}
-                    </span>
+        {galleries.map((gallery) => {
+          const images = gallery.images as any[] | null;
+          const photosCount = images?.length || 0;
+
+          return (
+            <article key={gallery.id} className="group relative">
+              <Link to={`/galleries/${gallery.slug}`} className="block">
+                <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted">
+                  {gallery.cover_image ? (
+                    <img
+                      src={gallery.cover_image}
+                      alt={gallery.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <Camera className="h-12 w-12" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="flex items-center gap-2 text-white/80 text-xs mb-2">
+                      <Camera className="w-4 h-4" />
+                      <span>{photosCount} фото</span>
+                      <span className="uppercase">
+                        {gallery.type === "photoreport"
+                          ? "Фоторепортаж"
+                          : "Галерея"}
+                      </span>
+                    </div>
+                    <h3 className="text-white font-condensed font-bold text-lg leading-tight line-clamp-2 text-shadow">
+                      {gallery.title}
+                    </h3>
                   </div>
-                  <h3 className="text-white font-condensed font-bold text-lg leading-tight line-clamp-2 text-shadow">
-                    {gallery.title}
-                  </h3>
                 </div>
-              </div>
-            </Link>
-          </article>
-        ))}
+              </Link>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
