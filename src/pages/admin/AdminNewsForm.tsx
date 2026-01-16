@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 const newsSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
@@ -257,11 +258,12 @@ export default function AdminNewsForm() {
                       <FormItem>
                         <FormLabel>Содержание</FormLabel>
                         <FormControl>
-                          <Textarea {...field} rows={12} />
+                          <RichTextEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder="Начните писать новость..."
+                          />
                         </FormControl>
-                        <FormDescription>
-                          Поддерживается HTML-разметка
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
