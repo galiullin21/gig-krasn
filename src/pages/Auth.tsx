@@ -11,42 +11,61 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Phone } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-const loginSchema = z.object({
+const emailLoginSchema = z.object({
   email: z.string().email("Введите корректный email"),
   password: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
 });
 
-const signupSchema = z.object({
+const emailSignupSchema = z.object({
   email: z.string().email("Введите корректный email"),
   password: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
   fullName: z.string().min(2, "Введите ваше имя"),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
-type SignupFormData = z.infer<typeof signupSchema>;
+const phoneSchema = z.object({
+  phone: z.string().min(10, "Введите корректный номер телефона").max(15),
+});
+
+const phoneSignupSchema = z.object({
+  phone: z.string().min(10, "Введите корректный номер телефона").max(15),
+  fullName: z.string().min(2, "Введите ваше имя"),
+});
+
+type EmailLoginFormData = z.infer<typeof emailLoginSchema>;
+type EmailSignupFormData = z.infer<typeof emailSignupSchema>;
+type PhoneFormData = z.infer<typeof phoneSchema>;
+type PhoneSignupFormData = z.infer<typeof phoneSignupSchema>;
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
+  const [phoneStep, setPhoneStep] = useState<"phone" | "otp">("phone");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const loginForm = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const emailLoginForm = useForm<EmailLoginFormData>({
+    resolver: zodResolver(emailLoginSchema),
+    defaultValues: { email: "", password: "" },
   });
 
-  const signupForm = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      fullName: "",
-    },
+  const emailSignupForm = useForm<EmailSignupFormData>({
+    resolver: zodResolver(emailSignupSchema),
+    defaultValues: { email: "", password: "", fullName: "" },
+  });
+
+  const phoneLoginForm = useForm<PhoneFormData>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: { phone: "" },
+  });
+
+  const phoneSignupForm = useForm<PhoneSignupFormData>({
+    resolver: zodResolver(phoneSignupSchema),
+    defaultValues: { phone: "", fullName: "" },
   });
 
   useEffect(() => {
@@ -67,7 +86,7 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleLogin = async (data: LoginFormData) => {
+  const handleEmailLogin = async (data: EmailLoginFormData) => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -76,25 +95,56 @@ export default function Auth() {
       });
 
       if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast({
-            variant: "destructive",
-            title: "Ошибка входа",
-            description: "Неверный email или пароль",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Ошибка",
-            description: error.message,
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: "Ошибка входа",
+          description: error.message.includes("Invalid login credentials")
+            ? "Неверный email или пароль"
+            : error.message,
+        });
+        return;
+      }
+
+      toast({ title: "Успешный вход", description: "Добро пожаловать!" });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Произошла непредвиденная ошибка",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailSignup = async (data: EmailSignupFormData) => {
+    setIsLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: { full_name: data.fullName },
+        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка регистрации",
+          description: error.message.includes("already registered")
+            ? "Пользователь с таким email уже зарегистрирован"
+            : error.message,
+        });
         return;
       }
 
       toast({
-        title: "Успешный вход",
-        description: "Добро пожаловать!",
+        title: "Проверьте почту",
+        description: "Мы отправили письмо для подтверждения регистрации",
       });
     } catch (error) {
       toast({
@@ -107,43 +157,107 @@ export default function Auth() {
     }
   };
 
-  const handleSignup = async (data: SignupFormData) => {
+  const handlePhoneLogin = async (data: PhoneFormData) => {
     setIsLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const formattedPhone = data.phone.startsWith("+") ? data.phone : `+7${data.phone.replace(/\D/g, "")}`;
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
+      });
 
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: error.message,
+        });
+        return;
+      }
+
+      setPhoneNumber(formattedPhone);
+      setPhoneStep("otp");
+      toast({
+        title: "Код отправлен",
+        description: "Введите код из SMS",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Произошла непредвиденная ошибка",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePhoneSignup = async (data: PhoneSignupFormData) => {
+    setIsLoading(true);
+    try {
+      const formattedPhone = data.phone.startsWith("+") ? data.phone : `+7${data.phone.replace(/\D/g, "")}`;
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
         options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: data.fullName,
-          },
+          data: { full_name: data.fullName },
         },
       });
 
       if (error) {
-        if (error.message.includes("already registered")) {
-          toast({
-            variant: "destructive",
-            title: "Ошибка регистрации",
-            description: "Пользователь с таким email уже зарегистрирован",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Ошибка",
-            description: error.message,
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: error.message,
+        });
         return;
       }
 
+      setPhoneNumber(formattedPhone);
+      setPhoneStep("otp");
       toast({
-        title: "Регистрация успешна",
-        description: "Добро пожаловать на сайт!",
+        title: "Код отправлен",
+        description: "Введите код из SMS",
       });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Произошла непредвиденная ошибка",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Введите 6-значный код",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phoneNumber,
+        token: otpCode,
+        type: "sms",
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: "Неверный код подтверждения",
+        });
+        return;
+      }
+
+      toast({ title: "Успешный вход", description: "Добро пожаловать!" });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -167,99 +281,229 @@ export default function Auth() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="login">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Вход</TabsTrigger>
-                  <TabsTrigger value="signup">Регистрация</TabsTrigger>
-                </TabsList>
+              {/* Auth Method Toggle */}
+              <div className="flex gap-2 mb-6">
+                <Button
+                  variant={authMethod === "email" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => {
+                    setAuthMethod("email");
+                    setPhoneStep("phone");
+                  }}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email
+                </Button>
+                <Button
+                  variant={authMethod === "phone" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => {
+                    setAuthMethod("phone");
+                    setPhoneStep("phone");
+                  }}
+                >
+                  <Phone className="w-4 h-4 mr-2" />
+                  Телефон
+                </Button>
+              </div>
 
-                <TabsContent value="login">
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="email@example.com" type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Пароль</FormLabel>
-                            <FormControl>
-                              <Input placeholder="••••••" type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Войти
-                      </Button>
-                    </form>
-                  </Form>
-                </TabsContent>
+              {authMethod === "email" ? (
+                <Tabs defaultValue="login">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="login">Вход</TabsTrigger>
+                    <TabsTrigger value="signup">Регистрация</TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="signup">
-                  <Form {...signupForm}>
-                    <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
-                      <FormField
-                        control={signupForm.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Имя</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Иван Иванов" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={signupForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="email@example.com" type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={signupForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Пароль</FormLabel>
-                            <FormControl>
-                              <Input placeholder="••••••" type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Зарегистрироваться
-                      </Button>
-                    </form>
-                  </Form>
-                </TabsContent>
-              </Tabs>
+                  <TabsContent value="login">
+                    <Form {...emailLoginForm}>
+                      <form onSubmit={emailLoginForm.handleSubmit(handleEmailLogin)} className="space-y-4">
+                        <FormField
+                          control={emailLoginForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="email@example.com" type="email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={emailLoginForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Пароль</FormLabel>
+                              <FormControl>
+                                <Input placeholder="••••••" type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Войти
+                        </Button>
+                      </form>
+                    </Form>
+                  </TabsContent>
+
+                  <TabsContent value="signup">
+                    <Form {...emailSignupForm}>
+                      <form onSubmit={emailSignupForm.handleSubmit(handleEmailSignup)} className="space-y-4">
+                        <FormField
+                          control={emailSignupForm.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Имя</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Иван Иванов" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={emailSignupForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="email@example.com" type="email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={emailSignupForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Пароль</FormLabel>
+                              <FormControl>
+                                <Input placeholder="••••••" type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Зарегистрироваться
+                        </Button>
+                      </form>
+                    </Form>
+                  </TabsContent>
+                </Tabs>
+              ) : phoneStep === "phone" ? (
+                <Tabs defaultValue="login">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="login">Вход</TabsTrigger>
+                    <TabsTrigger value="signup">Регистрация</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="login">
+                    <Form {...phoneLoginForm}>
+                      <form onSubmit={phoneLoginForm.handleSubmit(handlePhoneLogin)} className="space-y-4">
+                        <FormField
+                          control={phoneLoginForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Номер телефона</FormLabel>
+                              <FormControl>
+                                <Input placeholder="+7 999 123-45-67" type="tel" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Получить код
+                        </Button>
+                      </form>
+                    </Form>
+                  </TabsContent>
+
+                  <TabsContent value="signup">
+                    <Form {...phoneSignupForm}>
+                      <form onSubmit={phoneSignupForm.handleSubmit(handlePhoneSignup)} className="space-y-4">
+                        <FormField
+                          control={phoneSignupForm.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Имя</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Иван Иванов" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={phoneSignupForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Номер телефона</FormLabel>
+                              <FormControl>
+                                <Input placeholder="+7 999 123-45-67" type="tel" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Получить код
+                        </Button>
+                      </form>
+                    </Form>
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Код отправлен на номер {phoneNumber}
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button onClick={handleVerifyOtp} className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Подтвердить
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setPhoneStep("phone")}
+                  >
+                    Изменить номер
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

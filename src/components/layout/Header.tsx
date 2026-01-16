@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, Cloud, Sun, X, Crown, LogOut, MapPin } from "lucide-react";
+import { Search, User, Cloud, Sun, X, Crown, LogOut, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BurgerMenu } from "./BurgerMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
@@ -100,6 +101,7 @@ export function Header() {
           {/* Search, Theme & Auth - Desktop */}
           <div className="hidden md:flex items-center gap-2">
             <ThemeToggle />
+            <NotificationBell />
             {isSearchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <Input
@@ -218,6 +220,14 @@ export function Header() {
                   <hr className="my-2" />
                   {user ? (
                     <>
+                      <Link
+                        to="/notifications"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
+                      >
+                        <Bell className="w-5 h-5" />
+                        Уведомления
+                      </Link>
                       <Link
                         to="/cabinet"
                         onClick={() => setIsMenuOpen(false)}
