@@ -16,6 +16,16 @@ import Documents from "./pages/Documents";
 import Galleries from "./pages/Galleries";
 import Contacts from "./pages/Contacts";
 import NotFound from "./pages/NotFound";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminNewsList from "./pages/admin/AdminNewsList";
+import AdminNewsForm from "./pages/admin/AdminNewsForm";
+import AdminBlogsList from "./pages/admin/AdminBlogsList";
+import AdminBlogForm from "./pages/admin/AdminBlogForm";
+import AdminDocumentsList from "./pages/admin/AdminDocumentsList";
+import AdminDocumentForm from "./pages/admin/AdminDocumentForm";
+import AdminGalleriesList from "./pages/admin/AdminGalleriesList";
+import AdminGalleryForm from "./pages/admin/AdminGalleryForm";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +48,24 @@ const App = () => (
             <Route path="/documents" element={<Documents />} />
             <Route path="/galleries" element={<Galleries />} />
             <Route path="/contacts" element={<Contacts />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="news" element={<AdminNewsList />} />
+              <Route path="news/new" element={<AdminNewsForm />} />
+              <Route path="news/:id" element={<AdminNewsForm />} />
+              <Route path="blogs" element={<AdminBlogsList />} />
+              <Route path="blogs/new" element={<AdminBlogForm />} />
+              <Route path="blogs/:id" element={<AdminBlogForm />} />
+              <Route path="documents" element={<AdminDocumentsList />} />
+              <Route path="documents/new" element={<AdminDocumentForm />} />
+              <Route path="documents/:id" element={<AdminDocumentForm />} />
+              <Route path="galleries" element={<AdminGalleriesList />} />
+              <Route path="galleries/new" element={<AdminGalleryForm />} />
+              <Route path="galleries/:id" element={<AdminGalleryForm />} />
+            </Route>
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
