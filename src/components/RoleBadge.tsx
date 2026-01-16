@@ -60,8 +60,8 @@ export function RoleBadge({ role, isVerified, className, showIcon = true }: Role
         {config.label}
       </Badge>
       {isVerified && (
-        <span className="text-red-500" title="Официальный аккаунт">
-          <CheckCircle className="w-4 h-4 fill-current" />
+        <span className="text-blue-500" title="Официальный аккаунт">
+          <CheckCircle className="w-4 h-4" />
         </span>
       )}
     </div>
