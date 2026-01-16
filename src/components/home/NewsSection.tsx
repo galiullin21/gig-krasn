@@ -1,73 +1,55 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import { NewsCard } from "./NewsCard";
 import { Button } from "@/components/ui/button";
-
-interface NewsItem {
-  id: string;
-  title: string;
-  lead?: string;
-  coverImage?: string;
-  category: string;
-  date: string;
-  slug: string;
-}
-
-const mockNews: NewsItem[] = [
-  {
-    id: "1",
-    title: "Железногорский ГХК отметил 75-летие",
-    lead: "Юбилейные торжества прошли в городском дворце культуры с участием губернатора края",
-    coverImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop",
-    category: "Город",
-    date: "16 января 2026",
-    slug: "ghk-75-let",
-  },
-  {
-    id: "2",
-    title: "Новый детский сад открылся в микрорайоне №5",
-    lead: "Учреждение рассчитано на 280 детей и оборудовано по последним стандартам",
-    coverImage: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&h=400&fit=crop",
-    category: "Общество",
-    date: "15 января 2026",
-    slug: "novyj-detskij-sad",
-  },
-  {
-    id: "3",
-    title: "Хоккеисты «Сокола» одержали победу в краевом турнире",
-    coverImage: "https://images.unsplash.com/photo-1515703407324-5f753afd8be8?w=600&h=400&fit=crop",
-    category: "Спорт",
-    date: "14 января 2026",
-    slug: "sokol-pobeda",
-  },
-  {
-    id: "4",
-    title: "В городе стартовала программа благоустройства дворов",
-    coverImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop",
-    category: "Город",
-    date: "13 января 2026",
-    slug: "blagoustrojstvo-dvorov",
-  },
-  {
-    id: "5",
-    title: "Культурный центр представил новую выставку",
-    category: "Культура",
-    date: "12 января 2026",
-    slug: "novaya-vystavka",
-  },
-  {
-    id: "6",
-    title: "Городская администрация утвердила бюджет на 2026 год",
-    category: "Власть",
-    date: "11 января 2026",
-    slug: "byudzhet-2026",
-  },
-];
+import { AdBanner } from "./AdBanner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function NewsSection() {
-  const featuredNews = mockNews.slice(0, 2);
-  const regularNews = mockNews.slice(2, 4);
-  const smallNews = mockNews.slice(4);
+  const { data: news, isLoading } = useQuery({
+    queryKey: ["home-news"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("news")
+        .select("id, title, lead, cover_image, slug, published_at, category_id, categories(name)")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-8">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-64" />
+            ))}
+          </div>
+          <Skeleton className="h-96" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!news?.length) {
+    return null;
+  }
+
+  const featuredNews = news.slice(0, 2);
+  const regularNews = news.slice(2, 4);
+  const smallNews = news.slice(4);
 
   return (
     <section className="py-8">
@@ -85,27 +67,33 @@ export function NewsSection() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Featured news - Left column */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {featuredNews.map((news) => (
+          {featuredNews.map((item) => (
             <NewsCard
-              key={news.id}
-              id={news.id}
-              title={news.title}
-              lead={news.lead}
-              coverImage={news.coverImage}
-              category={news.category}
-              date={news.date}
-              slug={news.slug}
+              key={item.id}
+              id={item.id}
+              title={item.title}
+              lead={item.lead || undefined}
+              coverImage={item.cover_image || undefined}
+              category={(item.categories as any)?.name || "Новости"}
+              date={item.published_at 
+                ? format(new Date(item.published_at), "d MMMM yyyy", { locale: ru })
+                : ""
+              }
+              slug={item.slug}
             />
           ))}
-          {regularNews.map((news) => (
+          {regularNews.map((item) => (
             <NewsCard
-              key={news.id}
-              id={news.id}
-              title={news.title}
-              coverImage={news.coverImage}
-              category={news.category}
-              date={news.date}
-              slug={news.slug}
+              key={item.id}
+              id={item.id}
+              title={item.title}
+              coverImage={item.cover_image || undefined}
+              category={(item.categories as any)?.name || "Новости"}
+              date={item.published_at 
+                ? format(new Date(item.published_at), "d MMMM yyyy", { locale: ru })
+                : ""
+              }
+              slug={item.slug}
               variant="horizontal"
             />
           ))}
@@ -113,38 +101,36 @@ export function NewsSection() {
 
         {/* Sidebar - Right column */}
         <div className="space-y-6">
-          <div className="bg-muted rounded-lg p-4">
-            <h3 className="font-condensed font-bold text-lg mb-4 uppercase">
-              Популярное
-            </h3>
-            <div className="space-y-4">
-              {smallNews.map((news, index) => (
-                <div key={news.id} className="flex gap-3">
-                  <span className="text-2xl font-bold text-muted-foreground/30">
-                    {index + 1}
-                  </span>
-                  <NewsCard
-                    id={news.id}
-                    title={news.title}
-                    category={news.category}
-                    date={news.date}
-                    slug={news.slug}
-                    variant="small"
-                  />
-                </div>
-              ))}
+          {smallNews.length > 0 && (
+            <div className="bg-muted rounded-lg p-4">
+              <h3 className="font-condensed font-bold text-lg mb-4 uppercase">
+                Ещё новости
+              </h3>
+              <div className="space-y-4">
+                {smallNews.map((item, index) => (
+                  <div key={item.id} className="flex gap-3">
+                    <span className="text-2xl font-bold text-muted-foreground/30">
+                      {index + 1}
+                    </span>
+                    <NewsCard
+                      id={item.id}
+                      title={item.title}
+                      category={(item.categories as any)?.name || "Новости"}
+                      date={item.published_at 
+                        ? format(new Date(item.published_at), "d MMMM yyyy", { locale: ru })
+                        : ""
+                      }
+                      slug={item.slug}
+                      variant="small"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Ad placeholder */}
-          <div className="bg-muted rounded-lg p-4 text-center">
-            <span className="text-xs text-muted-foreground uppercase">
-              Реклама
-            </span>
-            <div className="h-48 bg-muted-foreground/10 rounded mt-2 flex items-center justify-center">
-              <span className="text-muted-foreground">Рекламный баннер</span>
-            </div>
-          </div>
+          {/* Sidebar Ad */}
+          <AdBanner position="sidebar" />
         </div>
       </div>
 

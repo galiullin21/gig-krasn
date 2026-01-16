@@ -2,13 +2,17 @@ import { useState, useEffect, createContext, useContext, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "admin" | "editor" | "user";
+type AppRole = "admin" | "editor" | "author" | "developer";
 
 interface UserProfile {
   id: string;
   user_id: string;
   full_name: string | null;
   avatar_url: string | null;
+  bio?: string | null;
+  social_links?: Record<string, string | null> | null;
+  is_verified?: boolean;
+}
 }
 
 interface AuthContextType {
@@ -18,8 +22,10 @@ interface AuthContextType {
   roles: AppRole[];
   isAdmin: boolean;
   isEditor: boolean;
+  isDeveloper: boolean;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (rolesData) {
       setRoles(rolesData.map(r => r.role as AppRole));
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserData(user.id);
     }
   };
 
@@ -98,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = roles.includes("admin");
   const isEditor = roles.includes("editor") || isAdmin;
+  const isDeveloper = roles.includes("developer");
 
   return (
     <AuthContext.Provider
@@ -108,8 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roles,
         isAdmin,
         isEditor,
+        isDeveloper,
         isLoading,
         signOut,
+        refreshProfile,
       }}
     >
       {children}

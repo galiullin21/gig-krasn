@@ -1,13 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RoleBadge } from "@/components/RoleBadge";
+import { ProfileEditForm } from "@/components/cabinet/ProfileEditForm";
+import { SecuritySettings } from "@/components/cabinet/SecuritySettings";
+import { UserWarnings } from "@/components/cabinet/UserWarnings";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   User,
   Mail,
@@ -18,19 +23,14 @@ import {
   BookOpen,
   Settings,
   LogOut,
-  Crown,
-  Edit,
+  Pencil,
+  Moon,
 } from "lucide-react";
 
-const roleLabels: Record<string, { label: string; color: string; icon: typeof Crown }> = {
-  admin: { label: "Администратор", color: "bg-red-500", icon: Crown },
-  editor: { label: "Редактор", color: "bg-blue-500", icon: Edit },
-  user: { label: "Пользователь", color: "bg-gray-500", icon: User },
-};
-
 export default function Cabinet() {
-  const { user, profile, roles, isAdmin, isEditor, isLoading, signOut } = useAuth();
+  const { user, profile, roles, isAdmin, isEditor, isDeveloper, isLoading, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -41,6 +41,11 @@ export default function Cabinet() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleEditSuccess = async () => {
+    await refreshProfile();
+    setIsEditing(false);
   };
 
   if (isLoading) {
@@ -67,15 +72,25 @@ export default function Cabinet() {
     .toUpperCase() || user.email?.[0].toUpperCase() || "U";
 
   const displayRole = roles.length > 0 ? roles[0] : "user";
-  const roleInfo = roleLabels[displayRole] || roleLabels.user;
-  const RoleIcon = roleInfo.icon;
 
   return (
     <Layout>
       <div className="container py-6 md:py-8 max-w-4xl">
-        <h1 className="text-3xl md:text-4xl font-condensed font-bold mb-6">
-          Личный кабинет
-        </h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl md:text-4xl font-condensed font-bold">
+            Личный кабинет
+          </h1>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Выйти
+            </Button>
+          </div>
+        </div>
+
+        {/* Warnings */}
+        <UserWarnings userId={user.id} />
 
         {/* Profile Card */}
         <Card className="mb-6">
@@ -91,35 +106,67 @@ export default function Cabinet() {
                   <h2 className="text-2xl font-bold">
                     {profile?.full_name || "Пользователь"}
                   </h2>
-                  <Badge className={`${roleInfo.color} text-white`}>
-                    <RoleIcon className="w-3 h-3 mr-1" />
-                    {roleInfo.label}
-                  </Badge>
+                  <RoleBadge 
+                    role={displayRole} 
+                    isVerified={profile?.is_verified} 
+                  />
+                  {isDeveloper && (
+                    <RoleBadge role="developer" />
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="h-4 w-4" />
                   <span>{user.email}</span>
                 </div>
+
+                {profile?.bio && (
+                  <p className="text-muted-foreground mt-2">{profile.bio}</p>
+                )}
                 
                 {roles.length > 1 && (
                   <div className="flex flex-wrap gap-2 pt-2">
-                    {roles.slice(1).map((role) => (
-                      <Badge key={role} variant="outline">
-                        {roleLabels[role]?.label || role}
-                      </Badge>
+                    {roles.slice(1).filter(r => r !== "developer").map((role) => (
+                      <RoleBadge key={role} role={role} showIcon={false} />
                     ))}
                   </div>
                 )}
               </div>
 
-              <Button variant="outline" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Выйти
+              <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                {isEditing ? "Отмена" : "Редактировать"}
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Profile Form */}
+        {isEditing && (
+          <div className="mb-6">
+            <Tabs defaultValue="profile">
+              <TabsList className="mb-4">
+                <TabsTrigger value="profile">Профиль</TabsTrigger>
+                <TabsTrigger value="security">Безопасность</TabsTrigger>
+              </TabsList>
+              <TabsContent value="profile">
+                <ProfileEditForm
+                  userId={user.id}
+                  initialData={{
+                    full_name: profile?.full_name || null,
+                    avatar_url: profile?.avatar_url || null,
+                    bio: profile?.bio || null,
+                    social_links: profile?.social_links || null,
+                  }}
+                  onSuccess={handleEditSuccess}
+                />
+              </TabsContent>
+              <TabsContent value="security">
+                <SecuritySettings currentEmail={user.email || ""} />
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
 
         {/* Quick Stats for Admins/Editors */}
         {isEditor && (
@@ -229,15 +276,15 @@ export default function Cabinet() {
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                 <Shield className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{roleInfo.label}</p>
+                  <p className="font-medium">{roles.length > 0 ? roles.join(", ") : "Пользователь"}</p>
                   <p className="text-sm text-muted-foreground">Уровень доступа</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                <Mail className="h-5 w-5 text-muted-foreground" />
+                <Moon className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">Email подтверждён</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <p className="font-medium">Тема</p>
+                  <p className="text-sm text-muted-foreground">Используйте кнопку в шапке</p>
                 </div>
               </div>
             </div>
