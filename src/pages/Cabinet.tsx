@@ -105,9 +105,6 @@ export default function Cabinet() {
                     role={displayRole} 
                     isVerified={profile?.is_verified} 
                   />
-                  {isDeveloper && (
-                    <RoleBadge role="developer" />
-                  )}
                 </div>
                 
                 <div className="flex items-center gap-2 text-muted-foreground">
