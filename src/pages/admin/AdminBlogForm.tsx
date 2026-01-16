@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 const blogSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
@@ -226,9 +227,12 @@ export default function AdminBlogForm() {
                       <FormItem>
                         <FormLabel>Содержание</FormLabel>
                         <FormControl>
-                          <Textarea {...field} rows={15} />
+                          <RichTextEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder="Начните писать статью..."
+                          />
                         </FormControl>
-                        <FormDescription>Поддерживается HTML</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
