@@ -6,7 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import News from "./pages/News";
+import NewsDetail from "./pages/NewsDetail";
 import Blogs from "./pages/Blogs";
+import BlogDetail from "./pages/BlogDetail";
 import Archive from "./pages/Archive";
 import Documents from "./pages/Documents";
 import Galleries from "./pages/Galleries";
@@ -25,7 +27,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/news" element={<News />} />
+          <Route path="/news/:slug" element={<NewsDetail />} />
           <Route path="/blogs" element={<Blogs />} />
+          <Route path="/blogs/:slug" element={<BlogDetail />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/galleries" element={<Galleries />} />
