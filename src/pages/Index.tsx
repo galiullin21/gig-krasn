@@ -1,13 +1,41 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Layout } from "@/components/layout/Layout";
+import { HeroSlider } from "@/components/home/HeroSlider";
+import { AdBanner } from "@/components/home/AdBanner";
+import { BlogsSection } from "@/components/home/BlogsSection";
+import { NewsSection } from "@/components/home/NewsSection";
+import { GalleriesSection } from "@/components/home/GalleriesSection";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <Layout>
+      {/* Hero Slider */}
+      <HeroSlider />
+
+      {/* Ad Banner */}
+      <div className="container py-4">
+        <AdBanner position="header" />
       </div>
-    </div>
+
+      {/* Blogs Section */}
+      <div className="container">
+        <BlogsSection />
+      </div>
+
+      {/* News Section */}
+      <div className="container">
+        <NewsSection />
+      </div>
+
+      {/* Galleries Section */}
+      <div className="container">
+        <GalleriesSection />
+      </div>
+
+      {/* Bottom Ad */}
+      <div className="container py-8">
+        <AdBanner position="content" />
+      </div>
+    </Layout>
   );
 };
 
