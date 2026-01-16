@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, Menu, X, Cloud, Sun } from "lucide-react";
+import { Search, User, Cloud, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { BurgerMenu } from "./BurgerMenu";
 
 const navigation = [
   { name: "Новости", href: "/news" },
@@ -20,6 +17,7 @@ const navigation = [
 
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -140,22 +138,19 @@ export function Header() {
             >
               <Search className="w-4 h-4" />
             </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
+            <BurgerMenu
+              isOpen={isMenuOpen}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-primary-foreground"
+            />
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetContent side="right" className="w-72">
                 <nav className="flex flex-col gap-4 mt-8">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
                       to={item.href}
+                      onClick={() => setIsMenuOpen(false)}
                       className="text-lg font-medium hover:text-primary transition-colors"
                     >
                       {item.name}
@@ -164,6 +159,7 @@ export function Header() {
                   <hr className="my-2" />
                   <Link
                     to="/auth"
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
                   >
                     <User className="w-5 h-5" />
