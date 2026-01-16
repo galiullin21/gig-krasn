@@ -12,7 +12,6 @@ import { RoleBadge } from "@/components/RoleBadge";
 import { ProfileEditForm } from "@/components/cabinet/ProfileEditForm";
 import { SecuritySettings } from "@/components/cabinet/SecuritySettings";
 import { UserWarnings } from "@/components/cabinet/UserWarnings";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   User,
   Mail,
@@ -24,7 +23,6 @@ import {
   Settings,
   LogOut,
   Pencil,
-  Moon,
 } from "lucide-react";
 
 export default function Cabinet() {
@@ -80,13 +78,10 @@ export default function Cabinet() {
           <h1 className="text-3xl md:text-4xl font-condensed font-bold">
             Личный кабинет
           </h1>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Выйти
-            </Button>
-          </div>
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Выйти
+          </Button>
         </div>
 
         {/* Warnings */}
@@ -156,7 +151,11 @@ export default function Cabinet() {
                     full_name: profile?.full_name || null,
                     avatar_url: profile?.avatar_url || null,
                     bio: profile?.bio || null,
-                    social_links: profile?.social_links || null,
+                    social_links: profile?.social_links ? {
+                      vk: profile.social_links.vk || undefined,
+                      telegram: profile.social_links.telegram || undefined,
+                      ok: profile.social_links.ok || undefined,
+                    } : null,
                   }}
                   onSuccess={handleEditSuccess}
                 />
@@ -281,10 +280,10 @@ export default function Cabinet() {
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                <Moon className="h-5 w-5 text-muted-foreground" />
+                <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">Тема</p>
-                  <p className="text-sm text-muted-foreground">Используйте кнопку в шапке</p>
+                  <p className="font-medium">Email подтверждён</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
               </div>
             </div>
