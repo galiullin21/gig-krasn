@@ -26,6 +26,11 @@ import AdminDocumentsList from "./pages/admin/AdminDocumentsList";
 import AdminDocumentForm from "./pages/admin/AdminDocumentForm";
 import AdminGalleriesList from "./pages/admin/AdminGalleriesList";
 import AdminGalleryForm from "./pages/admin/AdminGalleryForm";
+import AdminArchiveList from "./pages/admin/AdminArchiveList";
+import AdminArchiveForm from "./pages/admin/AdminArchiveForm";
+import AdminUsersList from "./pages/admin/AdminUsersList";
+import AdminSettings from "./pages/admin/AdminSettings";
+import GalleryDetail from "./pages/GalleryDetail";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +52,7 @@ const App = () => (
             <Route path="/archive" element={<Archive />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/galleries" element={<Galleries />} />
+            <Route path="/galleries/:slug" element={<GalleryDetail />} />
             <Route path="/contacts" element={<Contacts />} />
             
             {/* Admin Routes */}
@@ -64,6 +70,11 @@ const App = () => (
               <Route path="galleries" element={<AdminGalleriesList />} />
               <Route path="galleries/new" element={<AdminGalleryForm />} />
               <Route path="galleries/:id" element={<AdminGalleryForm />} />
+              <Route path="archive" element={<AdminArchiveList />} />
+              <Route path="archive/new" element={<AdminArchiveForm />} />
+              <Route path="archive/:id" element={<AdminArchiveForm />} />
+              <Route path="users" element={<AdminUsersList />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
