@@ -30,12 +30,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 const blogSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
   slug: z.string().min(1, "Введите URL").max(255),
   content: z.string().optional(),
-  cover_image: z.string().url("Введите корректный URL").optional().or(z.literal("")),
+  cover_image: z.string().optional(),
   category_id: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]),
 });
@@ -301,18 +302,15 @@ export default function AdminBlogForm() {
                     name="cover_image"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>URL изображения</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="https://..." />
+                          <ImageUpload
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            bucket="covers"
+                            folder="blogs"
+                          />
                         </FormControl>
                         <FormMessage />
-                        {field.value && (
-                          <img
-                            src={field.value}
-                            alt="Preview"
-                            className="mt-2 rounded-lg w-full aspect-video object-cover"
-                          />
-                        )}
                       </FormItem>
                     )}
                   />
