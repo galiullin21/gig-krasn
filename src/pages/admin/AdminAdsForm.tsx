@@ -307,18 +307,29 @@ const AdminAdsForm = () => {
                   <FormField
                     control={form.control}
                     name="image_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ImageUpload
-                            value={field.value}
-                            onChange={field.onChange}
-                            bucket="ads"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const position = form.watch("position");
+                      const sizeHints: Record<string, string> = {
+                        header: "1200×150 px",
+                        content: "1200×200 px",
+                        sidebar: "300×400 px",
+                      };
+                      return (
+                        <FormItem>
+                          <FormControl>
+                            <ImageUpload
+                              value={field.value}
+                              onChange={field.onChange}
+                              bucket="ads"
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Рекомендуемый размер: {sizeHints[position] || "1200×150 px"}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </CardContent>
               </Card>

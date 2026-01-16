@@ -21,10 +21,10 @@ export function AdBanner({ position = "content", className = "" }: AdBannerProps
     },
   });
 
-  const heightClasses = {
-    header: "h-20 md:h-24",
-    content: "h-24 md:h-32",
-    sidebar: "h-48 md:h-64",
+  const maxHeightClasses = {
+    header: "max-h-32 md:max-h-40",
+    content: "max-h-40 md:max-h-52",
+    sidebar: "max-h-64 md:max-h-96",
   };
 
   if (!ad) {
@@ -38,11 +38,11 @@ export function AdBanner({ position = "content", className = "" }: AdBannerProps
           Реклама
         </span>
       </div>
-      <div className={`${heightClasses[position]} overflow-hidden`}>
+      <div className={`${maxHeightClasses[position]} overflow-hidden`}>
         <img
           src={ad.image_url}
           alt={ad.title}
-          className="w-full h-full object-cover"
+          className="w-full h-auto object-contain"
         />
       </div>
     </div>
