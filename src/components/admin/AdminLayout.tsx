@@ -16,6 +16,7 @@ import {
   Users,
   ArrowLeft,
   ChevronRight,
+  Megaphone,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -25,6 +26,7 @@ const sidebarItems = [
   { name: "Документы", href: "/admin/documents", icon: FileText },
   { name: "Галереи", href: "/admin/galleries", icon: Image },
   { name: "Архив газеты", href: "/admin/archive", icon: Archive },
+  { name: "Реклама", href: "/admin/ads", icon: Megaphone },
 ];
 
 const adminOnlyItems = [

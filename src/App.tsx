@@ -15,6 +15,7 @@ import Archive from "./pages/Archive";
 import Documents from "./pages/Documents";
 import Galleries from "./pages/Galleries";
 import Contacts from "./pages/Contacts";
+import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -28,11 +29,20 @@ import AdminGalleriesList from "./pages/admin/AdminGalleriesList";
 import AdminGalleryForm from "./pages/admin/AdminGalleryForm";
 import AdminArchiveList from "./pages/admin/AdminArchiveList";
 import AdminArchiveForm from "./pages/admin/AdminArchiveForm";
+import AdminAdsList from "./pages/admin/AdminAdsList";
+import AdminAdsForm from "./pages/admin/AdminAdsForm";
 import AdminUsersList from "./pages/admin/AdminUsersList";
 import AdminSettings from "./pages/admin/AdminSettings";
 import GalleryDetail from "./pages/GalleryDetail";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -54,6 +64,7 @@ const App = () => (
             <Route path="/galleries" element={<Galleries />} />
             <Route path="/galleries/:slug" element={<GalleryDetail />} />
             <Route path="/contacts" element={<Contacts />} />
+            <Route path="/search" element={<Search />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
@@ -73,6 +84,9 @@ const App = () => (
               <Route path="archive" element={<AdminArchiveList />} />
               <Route path="archive/new" element={<AdminArchiveForm />} />
               <Route path="archive/:id" element={<AdminArchiveForm />} />
+              <Route path="ads" element={<AdminAdsList />} />
+              <Route path="ads/new" element={<AdminAdsForm />} />
+              <Route path="ads/:id" element={<AdminAdsForm />} />
               <Route path="users" element={<AdminUsersList />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
