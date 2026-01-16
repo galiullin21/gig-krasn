@@ -3,8 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Cabinet from "./pages/Cabinet";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
 import Blogs from "./pages/Blogs";
@@ -19,26 +21,29 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/news/:slug" element={<NewsDetail />} />
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blogs/:slug" element={<BlogDetail />} />
-          <Route path="/archive" element={<Archive />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/galleries" element={<Galleries />} />
-          <Route path="/contacts" element={<Contacts />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/cabinet" element={<Cabinet />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/news/:slug" element={<NewsDetail />} />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blogs/:slug" element={<BlogDetail />} />
+            <Route path="/archive" element={<Archive />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/galleries" element={<Galleries />} />
+            <Route path="/contacts" element={<Contacts />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
