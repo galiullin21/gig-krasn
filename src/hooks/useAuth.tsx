@@ -13,7 +13,6 @@ interface UserProfile {
   social_links?: Record<string, string | null> | null;
   is_verified?: boolean;
 }
-}
 
 interface AuthContextType {
   user: User | null;
@@ -45,7 +44,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId)
       .maybeSingle();
     
-    setProfile(profileData);
+    if (profileData) {
+      setProfile({
+        id: profileData.id,
+        user_id: profileData.user_id,
+        full_name: profileData.full_name,
+        avatar_url: profileData.avatar_url,
+        bio: profileData.bio,
+        social_links: profileData.social_links as Record<string, string | null> | null,
+        is_verified: profileData.is_verified,
+      });
+    } else {
+      setProfile(null);
+    }
 
     // Fetch roles
     const { data: rolesData } = await supabase

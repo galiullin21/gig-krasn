@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Cabinet from "./pages/Cabinet";
@@ -16,6 +17,7 @@ import Documents from "./pages/Documents";
 import Galleries from "./pages/Galleries";
 import Contacts from "./pages/Contacts";
 import Search from "./pages/Search";
+import CityMap from "./pages/CityMap";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -32,6 +34,7 @@ import AdminArchiveForm from "./pages/admin/AdminArchiveForm";
 import AdminAdsList from "./pages/admin/AdminAdsList";
 import AdminAdsForm from "./pages/admin/AdminAdsForm";
 import AdminUsersList from "./pages/admin/AdminUsersList";
+import AdminWarningForm from "./pages/admin/AdminWarningForm";
 import AdminSettings from "./pages/admin/AdminSettings";
 import GalleryDetail from "./pages/GalleryDetail";
 
@@ -46,56 +49,60 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/cabinet" element={<Cabinet />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/news/:slug" element={<NewsDetail />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/blogs/:slug" element={<BlogDetail />} />
-            <Route path="/archive" element={<Archive />} />
-            <Route path="/documents" element={<Documents />} />
-            <Route path="/galleries" element={<Galleries />} />
-            <Route path="/galleries/:slug" element={<GalleryDetail />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/search" element={<Search />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="news" element={<AdminNewsList />} />
-              <Route path="news/new" element={<AdminNewsForm />} />
-              <Route path="news/:id" element={<AdminNewsForm />} />
-              <Route path="blogs" element={<AdminBlogsList />} />
-              <Route path="blogs/new" element={<AdminBlogForm />} />
-              <Route path="blogs/:id" element={<AdminBlogForm />} />
-              <Route path="documents" element={<AdminDocumentsList />} />
-              <Route path="documents/new" element={<AdminDocumentForm />} />
-              <Route path="documents/:id" element={<AdminDocumentForm />} />
-              <Route path="galleries" element={<AdminGalleriesList />} />
-              <Route path="galleries/new" element={<AdminGalleryForm />} />
-              <Route path="galleries/:id" element={<AdminGalleryForm />} />
-              <Route path="archive" element={<AdminArchiveList />} />
-              <Route path="archive/new" element={<AdminArchiveForm />} />
-              <Route path="archive/:id" element={<AdminArchiveForm />} />
-              <Route path="ads" element={<AdminAdsList />} />
-              <Route path="ads/new" element={<AdminAdsForm />} />
-              <Route path="ads/:id" element={<AdminAdsForm />} />
-              <Route path="users" element={<AdminUsersList />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="light" storageKey="gig-theme">
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/cabinet" element={<Cabinet />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/news/:slug" element={<NewsDetail />} />
+              <Route path="/blogs" element={<Blogs />} />
+              <Route path="/blogs/:slug" element={<BlogDetail />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/documents" element={<Documents />} />
+              <Route path="/galleries" element={<Galleries />} />
+              <Route path="/galleries/:slug" element={<GalleryDetail />} />
+              <Route path="/contacts" element={<Contacts />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/map" element={<CityMap />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="news" element={<AdminNewsList />} />
+                <Route path="news/new" element={<AdminNewsForm />} />
+                <Route path="news/:id" element={<AdminNewsForm />} />
+                <Route path="blogs" element={<AdminBlogsList />} />
+                <Route path="blogs/new" element={<AdminBlogForm />} />
+                <Route path="blogs/:id" element={<AdminBlogForm />} />
+                <Route path="documents" element={<AdminDocumentsList />} />
+                <Route path="documents/new" element={<AdminDocumentForm />} />
+                <Route path="documents/:id" element={<AdminDocumentForm />} />
+                <Route path="galleries" element={<AdminGalleriesList />} />
+                <Route path="galleries/new" element={<AdminGalleryForm />} />
+                <Route path="galleries/:id" element={<AdminGalleryForm />} />
+                <Route path="archive" element={<AdminArchiveList />} />
+                <Route path="archive/new" element={<AdminArchiveForm />} />
+                <Route path="archive/:id" element={<AdminArchiveForm />} />
+                <Route path="ads" element={<AdminAdsList />} />
+                <Route path="ads/new" element={<AdminAdsForm />} />
+                <Route path="ads/:id" element={<AdminAdsForm />} />
+                <Route path="users" element={<AdminUsersList />} />
+                <Route path="warnings/new" element={<AdminWarningForm />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

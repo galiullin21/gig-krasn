@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, Cloud, Sun, X, Crown, LogOut } from "lucide-react";
+import { Search, User, Cloud, Sun, X, Crown, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BurgerMenu } from "./BurgerMenu";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
@@ -21,6 +22,7 @@ const navigation = [
   { name: "Архив газеты", href: "/archive" },
   { name: "Документы", href: "/documents" },
   { name: "Фотогалерея", href: "/galleries" },
+  { name: "Карта города", href: "/map" },
   { name: "Контакты", href: "/contacts" },
 ];
 
@@ -95,8 +97,9 @@ export function Header() {
             </a>
           </div>
 
-          {/* Search & Auth - Desktop */}
+          {/* Search, Theme & Auth - Desktop */}
           <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
             {isSearchOpen ? (
               <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <Input
