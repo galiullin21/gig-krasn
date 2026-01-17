@@ -39,7 +39,7 @@ const sidebarItems = [
   { name: "Кросс-постинг", href: "/admin/crosspost", icon: Share2 },
 ];
 
-import { MessageSquare, Terminal } from "lucide-react";
+import { MessageSquare, Terminal, ClipboardList } from "lucide-react";
 
 const adminOnlyItems = [
   { name: "Пользователи", href: "/admin/users", icon: Users },
@@ -55,6 +55,7 @@ const adminOnlyItems = [
 
 const developerOnlyItems = [
   { name: "Логи обновлений", href: "/admin/dev-logs", icon: Terminal },
+  { name: "Отчёт по проекту", href: "/admin/project-report", icon: ClipboardList },
 ];
 
 export function AdminLayout() {

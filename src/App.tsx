@@ -47,6 +47,7 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminMedia from "./pages/admin/AdminMedia";
 import AdminDevLogs from "./pages/admin/AdminDevLogs";
+import AdminProjectReport from "./pages/admin/AdminProjectReport";
 import GalleryDetail from "./pages/GalleryDetail";
 
 // Component that sets up realtime notifications
@@ -123,6 +124,7 @@ const App = () => (
                   <Route path="media" element={<AdminMedia />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="dev-logs" element={<AdminDevLogs />} />
+                  <Route path="project-report" element={<AdminProjectReport />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />
