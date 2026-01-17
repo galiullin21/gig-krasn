@@ -163,32 +163,48 @@ export default function AdminUsersList() {
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       // Delete in correct order to avoid foreign key issues
-      // 1. Delete warning messages first
-      await supabase.from("warning_messages")
-        .delete()
-        .in("warning_id", 
-          (await supabase.from("user_warnings").select("id").eq("user_id", userId)).data?.map(w => w.id) || []
-        );
+      // 1. Get warning IDs first
+      const { data: warnings } = await supabase
+        .from("user_warnings")
+        .select("id")
+        .eq("user_id", userId);
       
-      // 2. Delete warnings
-      await supabase.from("user_warnings").delete().eq("user_id", userId);
+      const warningIds = warnings?.map(w => w.id) || [];
       
-      // 3. Delete reactions
-      await supabase.from("reactions").delete().eq("user_id", userId);
+      // 2. Delete warning messages if there are warnings
+      if (warningIds.length > 0) {
+        const { error: msgError } = await supabase
+          .from("warning_messages")
+          .delete()
+          .in("warning_id", warningIds);
+        if (msgError) console.error("Warning messages delete error:", msgError);
+      }
       
-      // 4. Delete comments
-      await supabase.from("comments").delete().eq("user_id", userId);
+      // 3. Delete warnings
+      const { error: warnError } = await supabase.from("user_warnings").delete().eq("user_id", userId);
+      if (warnError) console.error("Warnings delete error:", warnError);
       
-      // 5. Delete notifications
-      await supabase.from("notifications").delete().eq("user_id", userId);
+      // 4. Delete reactions
+      const { error: reactError } = await supabase.from("reactions").delete().eq("user_id", userId);
+      if (reactError) console.error("Reactions delete error:", reactError);
       
-      // 6. Delete user preferences
-      await supabase.from("user_preferences").delete().eq("user_id", userId);
+      // 5. Delete comments
+      const { error: commError } = await supabase.from("comments").delete().eq("user_id", userId);
+      if (commError) console.error("Comments delete error:", commError);
       
-      // 7. Delete roles
-      await supabase.from("user_roles").delete().eq("user_id", userId);
+      // 6. Delete notifications
+      const { error: notifError } = await supabase.from("notifications").delete().eq("user_id", userId);
+      if (notifError) console.error("Notifications delete error:", notifError);
       
-      // 8. Delete profile
+      // 7. Delete user preferences
+      const { error: prefError } = await supabase.from("user_preferences").delete().eq("user_id", userId);
+      if (prefError) console.error("Preferences delete error:", prefError);
+      
+      // 8. Delete ALL roles (user can have multiple)
+      const { error: roleError } = await supabase.from("user_roles").delete().eq("user_id", userId);
+      if (roleError) console.error("Roles delete error:", roleError);
+      
+      // 9. Delete profile
       const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
       if (error) throw error;
     },

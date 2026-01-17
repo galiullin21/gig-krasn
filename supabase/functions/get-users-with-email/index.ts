@@ -43,15 +43,17 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    const { data: roleData, error: roleError } = await supabaseAdmin
+    // User can have multiple roles, so we need to fetch all of them
+    const { data: rolesData, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .maybeSingle();
+      .eq('user_id', user.id);
     
-    console.log('User role check:', { userId: user.id, role: roleData?.role, error: roleError });
+    const userRoles = rolesData?.map(r => r.role) || [];
+    console.log('User role check:', { userId: user.id, roles: userRoles, error: roleError });
     
-    if (!roleData || !['admin', 'developer'].includes(roleData.role)) {
+    const hasAdminAccess = userRoles.some(role => ['admin', 'developer'].includes(role));
+    if (!hasAdminAccess) {
       return new Response(
         JSON.stringify({ error: 'Forbidden - admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
