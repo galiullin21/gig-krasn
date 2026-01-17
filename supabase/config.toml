@@ -2,3 +2,6 @@ project_id = "ymolmtxhitmeuqdrfqih"
 
 [functions.crosspost]
 verify_jwt = false
+
+[functions.track-ad-click]
+verify_jwt = false

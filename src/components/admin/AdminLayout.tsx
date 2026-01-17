@@ -22,6 +22,7 @@ import {
   Bell,
   Activity,
   Share2,
+  Mail,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -40,6 +41,9 @@ const adminOnlyItems = [
   { name: "Предупреждения", href: "/admin/warnings", icon: AlertTriangle },
   { name: "Действия", href: "/admin/actions", icon: Activity },
   { name: "Уведомления", href: "/admin/notifications", icon: Bell },
+  { name: "Категории", href: "/admin/categories", icon: BookOpen },
+  { name: "Рассылка", href: "/admin/newsletter", icon: Mail },
+  { name: "Медиа", href: "/admin/media", icon: Image },
   { name: "Настройки", href: "/admin/settings", icon: Settings },
 ];
 

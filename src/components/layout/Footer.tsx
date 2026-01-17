@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { NewsletterSubscription } from "@/components/newsletter/NewsletterSubscription";
 
 export function Footer() {
   return (
@@ -51,28 +52,12 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Газета */}
+          {/* Newsletter */}
           <div>
             <h3 className="font-condensed font-bold text-lg mb-4 uppercase">
-              Газета
+              Рассылка
             </h3>
-            <ul className="space-y-2 text-sm text-white/70">
-              <li>
-                <Link to="/archive" className="hover:text-white transition-colors">
-                  Архив выпусков
-                </Link>
-              </li>
-              <li>
-                <Link to="/subscription" className="hover:text-white transition-colors">
-                  Подписка
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-white transition-colors">
-                  О редакции
-                </Link>
-              </li>
-            </ul>
+            <NewsletterSubscription />
           </div>
 
           {/* Реклама */}

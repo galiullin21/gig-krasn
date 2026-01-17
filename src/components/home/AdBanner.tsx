@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,19 +8,44 @@ interface AdBannerProps {
 }
 
 export function AdBanner({ position = "content", className = "" }: AdBannerProps) {
-  const { data: ad } = useQuery({
-    queryKey: ["ad", position],
+  const { data: ads } = useQuery({
+    queryKey: ["ads", position],
     queryFn: async () => {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from("ads")
         .select("*")
         .eq("position", position)
         .eq("is_active", true)
-        .maybeSingle();
+        .or(`start_date.is.null,start_date.lte.${now}`)
+        .or(`end_date.is.null,end_date.gte.${now}`)
+        .order("priority", { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
+
+  // Pick a random ad weighted by priority
+  const ad = ads && ads.length > 0
+    ? ads[Math.floor(Math.random() * Math.min(ads.length, 3))]
+    : null;
+
+  // Track impression
+  useEffect(() => {
+    if (ad?.id) {
+      supabase.functions.invoke("track-ad-click", {
+        body: { ad_id: ad.id, type: "impression" },
+      }).catch(console.error);
+    }
+  }, [ad?.id]);
+
+  const trackClick = () => {
+    if (ad?.id) {
+      supabase.functions.invoke("track-ad-click", {
+        body: { ad_id: ad.id, type: "click" },
+      }).catch(console.error);
+    }
+  };
 
   const maxHeightClasses = {
     header: "max-h-32 md:max-h-40",
@@ -43,13 +69,14 @@ export function AdBanner({ position = "content", className = "" }: AdBannerProps
           src={ad.image_url}
           alt={ad.title}
           className="w-full h-auto object-contain"
+          loading="lazy"
         />
       </div>
     </div>
   );
 
   return ad.link_url ? (
-    <a href={ad.link_url} target="_blank" rel="noopener noreferrer">
+    <a href={ad.link_url} target="_blank" rel="noopener noreferrer" onClick={trackClick}>
       {content}
     </a>
   ) : (
