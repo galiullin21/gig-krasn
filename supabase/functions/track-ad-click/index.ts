@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -6,49 +5,114 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+// Simple in-memory rate limiting (resets on function cold start)
+const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 20; // Max 20 requests per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now - record.timestamp > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, timestamp: now });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Validate UUID format
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { ad_id, type } = await req.json();
+    // Get client IP for rate limiting
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+               req.headers.get("cf-connecting-ip") || 
+               "unknown";
+    
+    // Check rate limit
+    if (!checkRateLimit(ip)) {
+      console.warn(`Rate limit exceeded for IP: ${ip.substring(0, 10)}...`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests" }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
-    if (!ad_id) {
+    const body = await req.json();
+    const { ad_id, type } = body;
+
+    // Validate ad_id format
+    if (!ad_id || typeof ad_id !== "string") {
       return new Response(
         JSON.stringify({ error: "ad_id is required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
+    if (!isValidUUID(ad_id)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid ad_id format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate type
+    const validTypes = ["impression", "click"];
+    const trackingType = validTypes.includes(type) ? type : "click";
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (type === "impression") {
+    // First verify the ad exists
+    const { data: adExists, error: checkError } = await supabase
+      .from("ads")
+      .select("id")
+      .eq("id", ad_id)
+      .eq("is_active", true)
+      .single();
+
+    if (checkError || !adExists) {
+      return new Response(
+        JSON.stringify({ error: "Ad not found or inactive" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (trackingType === "impression") {
       // Increment impressions count
-      const { error } = await supabase.rpc("increment_ad_impressions", { ad_id });
+      const { data: ad } = await supabase
+        .from("ads")
+        .select("impressions_count")
+        .eq("id", ad_id)
+        .single();
       
-      if (error) {
-        // Fallback: manual increment if RPC doesn't exist
-        const { data: ad } = await supabase
+      if (ad) {
+        await supabase
           .from("ads")
-          .select("impressions_count")
-          .eq("id", ad_id)
-          .single();
-        
-        if (ad) {
-          await supabase
-            .from("ads")
-            .update({ impressions_count: (ad.impressions_count || 0) + 1 })
-            .eq("id", ad_id);
-        }
+          .update({ impressions_count: (ad.impressions_count || 0) + 1 })
+          .eq("id", ad_id);
       }
       
       console.log(`Impression tracked for ad: ${ad_id}`);
     } else {
-      // Increment clicks count (default)
+      // Increment clicks count
       const { data: ad, error: fetchError } = await supabase
         .from("ads")
         .select("clicks_count")
