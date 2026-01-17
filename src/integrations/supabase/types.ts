@@ -237,6 +237,39 @@ export type Database = {
           },
         ]
       }
+      crosspost_logs: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          platform: string
+          post_id: string | null
+          status: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platform: string
+          post_id?: string | null
+          status?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platform?: string
+          post_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           category_id: string | null
