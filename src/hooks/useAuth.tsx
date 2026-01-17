@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useInactivityLogout } from "./useInactivityLogout";
 
 type AppRole = "admin" | "editor" | "author" | "developer";
 
@@ -28,6 +29,14 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function InactivityHandler({ isAuthenticated }: { isAuthenticated: boolean }) {
+  // Only track inactivity when user is authenticated
+  if (isAuthenticated) {
+    useInactivityLogout();
+  }
+  return null;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -138,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshProfile,
       }}
     >
+      <InactivityHandler isAuthenticated={!!user} />
       {children}
     </AuthContext.Provider>
   );
