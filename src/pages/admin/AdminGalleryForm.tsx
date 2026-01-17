@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Upload, X, Image } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCrosspost } from "@/hooks/useCrosspost";
 
 const gallerySchema = z.object({
   title: z.string().min(1, "Введите название").max(255),
@@ -46,6 +46,7 @@ export default function AdminGalleryForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { crosspost } = useCrosspost();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -164,6 +165,9 @@ export default function AdminGalleryForm() {
   const onSubmit = async (data: GalleryFormData) => {
     setIsSubmitting(true);
     try {
+      const wasPublished = !!galleryItem?.published_at;
+      const isPublishing = data.published && !wasPublished;
+
       const payload = {
         title: data.title,
         slug: data.slug,
@@ -173,6 +177,8 @@ export default function AdminGalleryForm() {
         published_at: data.published ? new Date().toISOString() : null,
       };
 
+      let contentId = id;
+
       if (isEditing) {
         const { error } = await supabase
           .from("galleries")
@@ -181,9 +187,19 @@ export default function AdminGalleryForm() {
         if (error) throw error;
         toast({ title: "Галерея обновлена" });
       } else {
-        const { error } = await supabase.from("galleries").insert(payload);
+        const { data: insertData, error } = await supabase
+          .from("galleries")
+          .insert(payload)
+          .select("id")
+          .single();
         if (error) throw error;
+        contentId = insertData.id;
         toast({ title: "Галерея создана" });
+      }
+
+      // Кросс-постинг при публикации
+      if (isPublishing && contentId) {
+        crosspost("gallery", contentId);
       }
 
       queryClient.invalidateQueries({ queryKey: ["admin-galleries"] });

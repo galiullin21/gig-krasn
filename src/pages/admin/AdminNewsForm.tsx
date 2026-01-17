@@ -33,6 +33,7 @@ import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { useCrosspost } from "@/hooks/useCrosspost";
 
 const newsSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
@@ -55,6 +56,7 @@ export default function AdminNewsForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { crosspost } = useCrosspost();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<NewsFormData>({
@@ -124,6 +126,9 @@ export default function AdminNewsForm() {
   const onSubmit = async (data: NewsFormData) => {
     setIsSubmitting(true);
     try {
+      const wasPublished = newsItem?.status === "published";
+      const isPublishing = data.status === "published" && !wasPublished;
+
       const payload = {
         title: data.title,
         slug: data.slug,
@@ -138,6 +143,8 @@ export default function AdminNewsForm() {
         published_at: data.status === "published" ? new Date().toISOString() : null,
       };
 
+      let contentId = id;
+
       if (isEditing) {
         const { error } = await supabase
           .from("news")
@@ -146,9 +153,19 @@ export default function AdminNewsForm() {
         if (error) throw error;
         toast({ title: "Новость обновлена" });
       } else {
-        const { error } = await supabase.from("news").insert([payload]);
+        const { data: insertData, error } = await supabase
+          .from("news")
+          .insert([payload])
+          .select("id")
+          .single();
         if (error) throw error;
+        contentId = insertData.id;
         toast({ title: "Новость создана" });
+      }
+
+      // Кросс-постинг при публикации
+      if (isPublishing && contentId) {
+        crosspost("news", contentId);
       }
 
       queryClient.invalidateQueries({ queryKey: ["admin-news"] });
