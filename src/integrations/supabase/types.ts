@@ -885,6 +885,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_views: {
+        Args: { record_id: string; table_name: string }
+        Returns: undefined
+      }
       is_admin_or_editor: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
