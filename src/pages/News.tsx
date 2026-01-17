@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -5,10 +6,13 @@ import { NewsCard } from "@/components/home/NewsCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Tag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Tag, CalendarIcon, X } from "lucide-react";
 import { TagBadge } from "@/components/tags/TagBadge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -17,6 +21,7 @@ export default function News() {
   const currentPage = parseInt(searchParams.get("page") || "1");
   const selectedCategory = searchParams.get("category") || "all";
   const selectedTag = searchParams.get("tag") || "";
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   // Fetch categories
   const { data: categories } = useQuery({
@@ -50,7 +55,7 @@ export default function News() {
 
   // Fetch news with pagination
   const { data: newsData, isLoading } = useQuery({
-    queryKey: ["news", selectedCategory, selectedTag, currentPage],
+    queryKey: ["news", selectedCategory, selectedTag, currentPage, selectedDate?.toISOString()],
     queryFn: async () => {
       // If filtering by tag, we need a different approach
       if (selectedTag) {
@@ -103,6 +108,13 @@ export default function News() {
         }
       }
 
+      // Filter by date if selected
+      if (selectedDate) {
+        const dayStart = startOfDay(selectedDate).toISOString();
+        const dayEnd = endOfDay(selectedDate).toISOString();
+        query = query.gte("published_at", dayStart).lte("published_at", dayEnd);
+      }
+
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
@@ -137,6 +149,25 @@ export default function News() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    // Reset to first page when date changes
+    const params: Record<string, string> = { category: selectedCategory, page: "1" };
+    if (selectedTag) params.tag = selectedTag;
+    setSearchParams(params);
+  };
+
+  const clearDateFilter = () => {
+    setSelectedDate(undefined);
+    const params: Record<string, string> = { category: selectedCategory, page: "1" };
+    if (selectedTag) params.tag = selectedTag;
+    setSearchParams(params);
+  };
+
+  const handleLoadMore = () => {
+    handlePageChange(currentPage + 1);
+  };
+
   return (
     <Layout>
       <div className="container py-6 md:py-8">
@@ -150,27 +181,72 @@ export default function News() {
           </p>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Button
-            variant={selectedCategory === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleCategoryChange("all")}
-            className="rounded-full"
-          >
-            Все новости
-          </Button>
-          {categories?.map((category) => (
+        {/* Filters Row */}
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          {/* Category Filters */}
+          <div className="flex flex-wrap gap-2">
             <Button
-              key={category.id}
-              variant={selectedCategory === category.slug ? "default" : "outline"}
+              variant={selectedCategory === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleCategoryChange(category.slug)}
+              onClick={() => handleCategoryChange("all")}
               className="rounded-full"
             >
-              {category.name}
+              Все новости
             </Button>
-          ))}
+            {categories?.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.slug ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleCategoryChange(category.slug)}
+                className="rounded-full"
+              >
+                {category.name}
+              </Button>
+            ))}
+          </div>
+
+          {/* Calendar Filter */}
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "rounded-full gap-2",
+                    selectedDate && "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  {selectedDate 
+                    ? format(selectedDate, "d MMMM yyyy", { locale: ru })
+                    : "Выбрать дату"
+                  }
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  locale={ru}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            {selectedDate && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearDateFilter}
+                className="h-8 w-8 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tag Filters */}
@@ -244,9 +320,23 @@ export default function News() {
           </div>
         )}
 
+        {/* Load More Button */}
+        {currentPage < totalPages && newsData && newsData.news.length > 0 && (
+          <div className="flex justify-center mt-8 md:mt-12">
+            <Button
+              variant="default"
+              size="lg"
+              onClick={handleLoadMore}
+              className="px-8"
+            >
+              Больше новостей
+            </Button>
+          </div>
+        )}
+
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8 md:mt-12">
+          <div className="flex items-center justify-center gap-2 mt-6">
             <Button
               variant="outline"
               size="icon"
