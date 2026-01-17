@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -23,6 +24,7 @@ interface Tag {
 
 export default function NewsDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const viewTracked = useRef(false);
 
   const { data: news, isLoading } = useQuery({
     queryKey: ["news", slug],
@@ -72,6 +74,25 @@ export default function NewsDetail() {
     },
     enabled: !!slug,
   });
+
+  // Track view count - only once per page load
+  useEffect(() => {
+    const trackView = async () => {
+      if (news?.id && !viewTracked.current) {
+        viewTracked.current = true;
+        try {
+          await supabase.rpc("increment_views", { 
+            table_name: "news", 
+            record_id: news.id 
+          });
+          console.log("View tracked for news:", news.id);
+        } catch (err) {
+          console.error("Failed to track view:", err);
+        }
+      }
+    };
+    trackView();
+  }, [news?.id]);
 
   const { data: similarNews } = useQuery({
     queryKey: ["similar-news", news?.category_id, news?.id],
