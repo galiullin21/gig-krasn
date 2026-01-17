@@ -598,7 +598,7 @@ export type Database = {
           created_at: string
           id: string
           issue_date: string
-          issue_number: number
+          issue_number: string
           pdf_url: string
           year: number
         }
@@ -607,7 +607,7 @@ export type Database = {
           created_at?: string
           id?: string
           issue_date: string
-          issue_number: number
+          issue_number: string
           pdf_url: string
           year: number
         }
@@ -616,7 +616,7 @@ export type Database = {
           created_at?: string
           id?: string
           issue_date?: string
-          issue_number?: number
+          issue_number?: string
           pdf_url?: string
           year?: number
         }
