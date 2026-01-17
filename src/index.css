@@ -6,41 +6,41 @@
 
 @layer base {
   :root {
-    /* GiG Color Palette */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 10%;
+    /* GiG Color Palette - More red accents */
+    --background: 0 0% 93%;
+    --foreground: 0 0% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 15%;
 
-    /* Primary Red */
-    --primary: 4 82% 56%;
+    /* Primary Red - More vibrant */
+    --primary: 0 85% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 0 0% 94%;
+    --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 4 82% 56%;
+    --accent: 0 85% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 4 82% 56%;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 0 85% 50%;
 
     --radius: 0.375rem;
 
     /* Custom colors */
-    --gig-red: 4 82% 56%;
-    --gig-dark: 0 0% 18%;
+    --gig-red: 0 85% 50%;
+    --gig-dark: 0 0% 15%;
     --gig-gray: 0 0% 45%;
     --gig-light-gray: 0 0% 96%;
     

@@ -16,19 +16,18 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Articles Section */}
-      <div className="container">
-        <ArticlesSection />
-      </div>
+      {/* Main Content with white background */}
+      <div className="bg-card">
+        <div className="container py-6">
+          {/* Articles Section */}
+          <ArticlesSection />
 
-      {/* Photo Galleries Section */}
-      <div className="container">
-        <PhotoSection />
-      </div>
+          {/* Photo Galleries Section */}
+          <PhotoSection />
 
-      {/* News Section with Calendar */}
-      <div className="container">
-        <NewsSectionRedesign />
+          {/* News Section with Calendar */}
+          <NewsSectionRedesign />
+        </div>
       </div>
     </Layout>
   );
