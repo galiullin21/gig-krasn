@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
+import { notifyNewComment } from "@/lib/adminNotifications";
 
 interface CommentFormProps {
   contentType: "news" | "blog";
   contentId: string;
+  contentTitle?: string;
+  contentSlug?: string;
   parentId?: string;
   onSuccess?: () => void;
   placeholder?: string;
@@ -19,12 +22,14 @@ interface CommentFormProps {
 export function CommentForm({
   contentType,
   contentId,
+  contentTitle,
+  contentSlug,
   parentId,
   onSuccess,
   placeholder = "Напишите комментарий...",
   autoFocus = false,
 }: CommentFormProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
@@ -43,6 +48,12 @@ export function CommentForm({
       });
 
       if (error) throw error;
+
+      // Send admin notification
+      if (contentTitle && contentSlug) {
+        const userName = profile?.full_name || user.email || "Пользователь";
+        await notifyNewComment(contentType, contentTitle, contentSlug, userName);
+      }
     },
     onSuccess: () => {
       setText("");

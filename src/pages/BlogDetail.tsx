@@ -256,17 +256,28 @@ export default function BlogDetail() {
             title={blog.title}
             description={description || ""}
             image={blog.cover_image || undefined}
+            contentType="blog"
           />
         </div>
 
         {/* Reactions */}
         <div className="flex items-center gap-4 mt-6 pt-6 border-t">
           <span className="text-sm text-muted-foreground">Оцените материал:</span>
-          <ReactionButtons contentType="blog" contentId={blog.id} />
+          <ReactionButtons 
+            contentType="blog" 
+            contentId={blog.id}
+            contentTitle={blog.title}
+            contentSlug={blog.slug}
+          />
         </div>
 
         {/* Comments */}
-        <CommentsSection contentType="blog" contentId={blog.id} />
+        <CommentsSection 
+          contentType="blog" 
+          contentId={blog.id}
+          contentTitle={blog.title}
+          contentSlug={blog.slug}
+        />
 
         {/* Similar blogs */}
         {similarBlogs && similarBlogs.length > 0 && (

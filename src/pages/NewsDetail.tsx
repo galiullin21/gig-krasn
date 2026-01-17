@@ -275,17 +275,28 @@ export default function NewsDetail() {
             title={news.title}
             description={news.lead || ""}
             image={news.cover_image || undefined}
+            contentType="news"
           />
         </div>
 
         {/* Reactions */}
         <div className="flex items-center gap-4 mt-6 pt-6 border-t">
           <span className="text-sm text-muted-foreground">Оцените материал:</span>
-          <ReactionButtons contentType="news" contentId={news.id} />
+          <ReactionButtons 
+            contentType="news" 
+            contentId={news.id}
+            contentTitle={news.title}
+            contentSlug={news.slug}
+          />
         </div>
 
         {/* Comments */}
-        <CommentsSection contentType="news" contentId={news.id} />
+        <CommentsSection 
+          contentType="news" 
+          contentId={news.id}
+          contentTitle={news.title}
+          contentSlug={news.slug}
+        />
 
         {/* Similar news */}
         {similarNews && similarNews.length > 0 && (
