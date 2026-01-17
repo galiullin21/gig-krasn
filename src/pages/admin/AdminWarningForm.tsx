@@ -72,14 +72,28 @@ export default function AdminWarningForm() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("user_warnings").insert({
+      // Create warning
+      const { error: warningError } = await supabase.from("user_warnings").insert({
         user_id: data.user_id,
         issued_by: user.id,
         reason: data.reason,
         details: data.details || null,
       });
 
-      if (error) throw error;
+      if (warningError) throw warningError;
+
+      // Create notification for the user
+      const { error: notificationError } = await supabase.from("notifications").insert({
+        user_id: data.user_id,
+        type: "warning",
+        title: "Вы получили предупреждение",
+        message: data.reason,
+        link: "/cabinet?tab=warnings",
+      });
+
+      if (notificationError) {
+        console.error("Failed to create notification:", notificationError);
+      }
 
       toast({ title: "Предупреждение выдано" });
       navigate("/admin/users");
