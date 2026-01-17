@@ -150,8 +150,9 @@ const handler = async (req: Request): Promise<Response> => {
             const errorData = await response.json();
             errors.push(`${subscriber.email}: ${errorData.message || 'Unknown error'}`);
           }
-        } catch (error) {
-          errors.push(`${subscriber.email}: ${error.message}`);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          errors.push(`${subscriber.email}: ${errorMessage}`);
         }
       });
 
@@ -177,10 +178,11 @@ const handler = async (req: Request): Promise<Response> => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in send-newsletter:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -1,28 +1,52 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface TagBadgeProps {
-  tag: {
+  tag?: {
     id: string;
     name: string;
     slug: string;
     type: string;
   };
+  // Alternative props for simpler usage
+  name?: string;
+  slug?: string;
+  isActive?: boolean;
   linkable?: boolean;
   className?: string;
 }
 
-export function TagBadge({ tag, linkable = true, className = "" }: TagBadgeProps) {
+export function TagBadge({ 
+  tag, 
+  name, 
+  slug, 
+  isActive = false, 
+  linkable = true, 
+  className = "" 
+}: TagBadgeProps) {
+  // Support both object and individual props
+  const tagName = tag?.name || name || "";
+  const tagSlug = tag?.slug || slug || "";
+  const tagType = tag?.type || "news";
+
   const badge = (
-    <Badge variant="secondary" className={`text-xs ${className}`}>
-      #{tag.name}
+    <Badge 
+      variant={isActive ? "default" : "secondary"} 
+      className={cn(
+        "text-xs transition-colors",
+        isActive && "bg-primary text-primary-foreground",
+        className
+      )}
+    >
+      #{tagName}
     </Badge>
   );
 
-  if (linkable) {
-    const basePath = tag.type === "news" ? "/news" : "/blogs";
+  if (linkable && !isActive) {
+    const basePath = tagType === "blog" ? "/blogs" : "/news";
     return (
-      <Link to={`${basePath}?tag=${tag.slug}`} className="hover:opacity-80 transition-opacity">
+      <Link to={`${basePath}?tag=${tagSlug}`} className="hover:opacity-80 transition-opacity">
         {badge}
       </Link>
     );
