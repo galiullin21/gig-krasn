@@ -11,6 +11,16 @@ import { Eye, Calendar, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactionButtons } from "@/components/reactions/ReactionButtons";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { ShareButtons } from "@/components/share/ShareButtons";
+import { SEO } from "@/components/seo/SEO";
+import { TagList } from "@/components/tags/TagBadge";
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+}
 
 export default function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -37,8 +47,18 @@ export default function BlogDetail() {
           .maybeSingle();
         authorProfile = profile;
       }
+
+      // Fetch tags
+      let tags: Tag[] = [];
+      if (data?.id) {
+        const { data: tagData } = await supabase
+          .from("blog_tags")
+          .select("tag_id, tags(id, name, slug, type)")
+          .eq("blog_id", data.id);
+        tags = (tagData || []).map((t: any) => t.tags).filter(Boolean);
+      }
       
-      return data ? { ...data, author_profile: authorProfile } : null;
+      return data ? { ...data, author_profile: authorProfile, tags } : null;
     },
     enabled: !!slug,
   });
@@ -121,8 +141,23 @@ export default function BlogDetail() {
     .join("")
     .toUpperCase() || "A";
 
+  // Extract first 160 chars for description
+  const description = blog.content
+    ? blog.content.replace(/<[^>]*>/g, "").substring(0, 160)
+    : undefined;
+
   return (
     <Layout>
+      <SEO
+        title={blog.title}
+        description={description}
+        image={blog.cover_image || undefined}
+        url={`/blogs/${blog.slug}`}
+        type="article"
+        publishedTime={blog.published_at || undefined}
+        author={blog.author_profile?.full_name || undefined}
+      />
+
       <article className="container py-6 md:py-8 max-w-4xl">
         {/* Back button */}
         <Link
@@ -141,9 +176,14 @@ export default function BlogDetail() {
         )}
 
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-condensed font-bold text-foreground leading-tight mb-6">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-condensed font-bold text-foreground leading-tight mb-4">
           {blog.title}
         </h1>
+
+        {/* Tags */}
+        {blog.tags && blog.tags.length > 0 && (
+          <TagList tags={blog.tags} className="mb-4" />
+        )}
 
         {/* Author card */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b">
@@ -177,6 +217,7 @@ export default function BlogDetail() {
               src={blog.cover_image}
               alt={blog.title}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
         )}
@@ -187,8 +228,18 @@ export default function BlogDetail() {
           dangerouslySetInnerHTML={{ __html: blog.content || "" }}
         />
 
+        {/* Share buttons */}
+        <div className="mt-8 pt-6 border-t">
+          <ShareButtons
+            url={`/blogs/${blog.slug}`}
+            title={blog.title}
+            description={description || ""}
+            image={blog.cover_image || undefined}
+          />
+        </div>
+
         {/* Reactions */}
-        <div className="flex items-center gap-4 mt-8 pt-6 border-t">
+        <div className="flex items-center gap-4 mt-6 pt-6 border-t">
           <span className="text-sm text-muted-foreground">Оцените материал:</span>
           <ReactionButtons contentType="blog" contentId={blog.id} />
         </div>
@@ -209,6 +260,7 @@ export default function BlogDetail() {
                         src={item.cover_image}
                         alt={item.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
