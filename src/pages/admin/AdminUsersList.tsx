@@ -48,6 +48,7 @@ interface UserWithRole {
   role: string | null;
   role_id: string | null;
   warnings_count: number;
+  email: string | null;
 }
 
 export default function AdminUsersList() {
@@ -60,6 +61,11 @@ export default function AdminUsersList() {
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users", search],
     queryFn: async () => {
+      // Fetch emails from edge function
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('get-users-with-email');
+      
+      const emailMap: Record<string, string> = emailError ? {} : (emailData?.emails || {});
+
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -89,12 +95,14 @@ export default function AdminUsersList() {
           role: userRole?.role || null,
           role_id: userRole?.id || null,
           warnings_count: warningsCounts[profile.user_id] || 0,
+          email: emailMap[profile.user_id] || null,
         };
       });
 
       if (search) {
         return usersWithRoles.filter((u) =>
-          u.full_name?.toLowerCase().includes(search.toLowerCase())
+          u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+          u.email?.toLowerCase().includes(search.toLowerCase())
         );
       }
 
@@ -206,10 +214,10 @@ export default function AdminUsersList() {
       </div>
 
       <div className="mb-4">
-        <div className="relative max-w-sm">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по имени..."
+            placeholder="Поиск по имени или email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -222,6 +230,7 @@ export default function AdminUsersList() {
           <TableHeader>
             <TableRow>
               <TableHead>Пользователь</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Роль</TableHead>
               <TableHead>Верификация</TableHead>
               <TableHead>Предупр.</TableHead>
@@ -239,6 +248,7 @@ export default function AdminUsersList() {
                       <Skeleton className="h-4 w-32" />
                     </div>
                   </TableCell>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-8" /></TableCell>
@@ -264,6 +274,11 @@ export default function AdminUsersList() {
                         )}
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {user.email || "—"}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -340,7 +355,7 @@ export default function AdminUsersList() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Пользователи не найдены
                 </TableCell>
               </TableRow>
