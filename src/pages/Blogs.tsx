@@ -6,17 +6,65 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Tag } from "lucide-react";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { TagBadge } from "@/components/tags/TagBadge";
 
 const ITEMS_PER_PAGE = 12;
 
 export default function Blogs() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = parseInt(searchParams.get("page") || "1");
+  const selectedTag = searchParams.get("tag") || "";
+
+  // Fetch tags
+  const { data: tags } = useQuery({
+    queryKey: ["tags", "blog"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tags")
+        .select("id, name, slug")
+        .eq("type", "blog")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: blogsData, isLoading } = useQuery({
-    queryKey: ["blogs", currentPage],
+    queryKey: ["blogs", selectedTag, currentPage],
     queryFn: async () => {
+      // If filtering by tag
+      if (selectedTag) {
+        const tag = tags?.find((t) => t.slug === selectedTag);
+        if (!tag) return { blogs: [], total: 0 };
+
+        const { data: taggedBlogs } = await supabase
+          .from("blog_tags")
+          .select("blog_id")
+          .eq("tag_id", tag.id);
+
+        if (!taggedBlogs?.length) return { blogs: [], total: 0 };
+
+        const blogIds = taggedBlogs.map((t) => t.blog_id);
+
+        const from = (currentPage - 1) * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+
+        const { data, error, count } = await supabase
+          .from("blogs")
+          .select("*, categories(name, slug)", { count: "exact" })
+          .eq("status", "published")
+          .in("id", blogIds)
+          .order("published_at", { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+        return { blogs: data, total: count || 0 };
+      }
+
+      // Standard query
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
@@ -30,12 +78,23 @@ export default function Blogs() {
       if (error) throw error;
       return { blogs: data, total: count || 0 };
     },
+    enabled: !!tags || !selectedTag,
   });
 
   const totalPages = Math.ceil((blogsData?.total || 0) / ITEMS_PER_PAGE);
 
+  const handleTagChange = (tagSlug: string) => {
+    if (tagSlug === selectedTag) {
+      setSearchParams({ page: "1" });
+    } else {
+      setSearchParams({ tag: tagSlug, page: "1" });
+    }
+  };
+
   const handlePageChange = (page: number) => {
-    setSearchParams({ page: page.toString() });
+    const params: Record<string, string> = { page: page.toString() };
+    if (selectedTag) params.tag = selectedTag;
+    setSearchParams(params);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -50,6 +109,36 @@ export default function Blogs() {
             Авторские материалы и мнения
           </p>
         </div>
+
+        {/* Tag Filters */}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 md:mb-8">
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => handleTagChange(tag.slug)}
+                className="focus:outline-none"
+              >
+                <TagBadge
+                  name={tag.name}
+                  slug={tag.slug}
+                  isActive={selectedTag === tag.slug}
+                />
+              </button>
+            ))}
+            {selectedTag && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleTagChange(selectedTag)}
+                className="text-xs h-6"
+              >
+                Сбросить тег
+              </Button>
+            )}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -68,10 +157,11 @@ export default function Blogs() {
                 <Link to={`/blogs/${blog.slug}`} className="block">
                   <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted mb-3">
                     {blog.cover_image ? (
-                      <img
+                      <OptimizedImage
                         src={blog.cover_image}
                         alt={blog.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
@@ -104,7 +194,9 @@ export default function Blogs() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">Блогов пока нет</p>
+            <p className="text-muted-foreground text-lg">
+              {selectedTag ? "Блогов с этим тегом пока нет" : "Блогов пока нет"}
+            </p>
           </div>
         )}
 

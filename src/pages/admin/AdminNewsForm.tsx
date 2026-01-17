@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Eye, FileText, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -50,6 +51,12 @@ const newsSchema = z.object({
 
 type NewsFormData = z.infer<typeof newsSchema>;
 
+interface Document {
+  id: string;
+  title: string;
+  file_url: string;
+}
+
 export default function AdminNewsForm() {
   const { id } = useParams();
   const isEditing = !!id;
@@ -60,6 +67,7 @@ export default function AdminNewsForm() {
   const { crosspost } = useCrosspost();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
 
   const form = useForm<NewsFormData>({
     resolver: zodResolver(newsSchema),
@@ -84,6 +92,19 @@ export default function AdminNewsForm() {
         .select("id, name")
         .eq("type", "news");
       return data || [];
+    },
+  });
+
+  // Fetch all documents
+  const { data: documents } = useQuery({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documents")
+        .select("id, title, file_url")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Document[];
     },
   });
 
@@ -115,6 +136,20 @@ export default function AdminNewsForm() {
     enabled: isEditing,
   });
 
+  // Fetch existing documents for the news item
+  const { data: existingDocuments } = useQuery({
+    queryKey: ["news-documents", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("news_documents")
+        .select("document_id")
+        .eq("news_id", id);
+      if (error) throw error;
+      return data?.map((d) => d.document_id) || [];
+    },
+    enabled: isEditing,
+  });
+
   useEffect(() => {
     if (newsItem) {
       form.reset({
@@ -137,12 +172,26 @@ export default function AdminNewsForm() {
     }
   }, [existingTags]);
 
+  useEffect(() => {
+    if (existingDocuments) {
+      setSelectedDocumentIds(existingDocuments);
+    }
+  }, [existingDocuments]);
+
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
       .replace(/[^\w\s-а-яё]/gi, "")
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
+
+  const toggleDocument = (docId: string) => {
+    setSelectedDocumentIds((prev) =>
+      prev.includes(docId)
+        ? prev.filter((id) => id !== docId)
+        : [...prev, docId]
+    );
   };
 
   const onSubmit = async (data: NewsFormData) => {
@@ -182,6 +231,14 @@ export default function AdminNewsForm() {
           );
         }
 
+        // Update documents
+        await supabase.from("news_documents").delete().eq("news_id", id);
+        if (selectedDocumentIds.length > 0) {
+          await supabase.from("news_documents").insert(
+            selectedDocumentIds.map((docId) => ({ news_id: id, document_id: docId }))
+          );
+        }
+
         toast({ title: "Новость обновлена" });
       } else {
         const { data: insertData, error } = await supabase
@@ -196,6 +253,13 @@ export default function AdminNewsForm() {
         if (selectedTagIds.length > 0) {
           await supabase.from("news_tags").insert(
             selectedTagIds.map((tagId) => ({ news_id: contentId, tag_id: tagId }))
+          );
+        }
+
+        // Insert documents
+        if (selectedDocumentIds.length > 0) {
+          await supabase.from("news_documents").insert(
+            selectedDocumentIds.map((docId) => ({ news_id: contentId, document_id: docId }))
           );
         }
 
@@ -228,6 +292,8 @@ export default function AdminNewsForm() {
       </div>
     );
   }
+
+  const selectedDocs = documents?.filter((d) => selectedDocumentIds.includes(d.id)) || [];
 
   return (
     <div className="p-6 md:p-8">
@@ -324,6 +390,76 @@ export default function AdminNewsForm() {
                       </FormItem>
                     )}
                   />
+                </CardContent>
+              </Card>
+
+              {/* Documents Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Прикрепленные документы
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Selected documents */}
+                  {selectedDocs.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Выбранные документы:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedDocs.map((doc) => (
+                          <div
+                            key={doc.id}
+                            className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-1.5 rounded-md text-sm"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span className="max-w-[200px] truncate">{doc.title}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleDocument(doc.id)}
+                              className="hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Available documents */}
+                  {documents && documents.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Доступные документы:
+                      </p>
+                      <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1">
+                        {documents
+                          .filter((d) => !selectedDocumentIds.includes(d.id))
+                          .map((doc) => (
+                            <div
+                              key={doc.id}
+                              className="flex items-center gap-2 p-2 hover:bg-muted rounded cursor-pointer"
+                              onClick={() => toggleDocument(doc.id)}
+                            >
+                              <Checkbox
+                                checked={selectedDocumentIds.includes(doc.id)}
+                                onCheckedChange={() => toggleDocument(doc.id)}
+                              />
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm truncate">{doc.title}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Документы ещё не загружены.{" "}
+                      <Link to="/admin/documents/new" className="text-primary hover:underline">
+                        Добавить документ
+                      </Link>
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>

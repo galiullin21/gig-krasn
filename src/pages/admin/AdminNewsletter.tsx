@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -22,11 +23,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Loader2, Mail, Search, Trash2, UserCheck, UserX, Users } from "lucide-react";
+import { Loader2, Mail, Search, Trash2, UserCheck, UserX, Users, Send, PenLine } from "lucide-react";
 
 interface Subscription {
   id: string;
@@ -38,6 +47,10 @@ interface Subscription {
 export default function AdminNewsletter() {
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showComposeDialog, setShowComposeDialog] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailContent, setEmailContent] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -91,14 +104,52 @@ export default function AdminNewsletter() {
     },
   });
 
+  const handleSendNewsletter = async () => {
+    if (!emailSubject.trim() || !emailContent.trim()) {
+      toast({ variant: "destructive", title: "Заполните тему и текст рассылки" });
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-newsletter", {
+        body: { subject: emailSubject, content: emailContent },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Рассылка отправлена",
+        description: `Отправлено ${data?.sent || 0} писем`,
+      });
+      setShowComposeDialog(false);
+      setEmailSubject("");
+      setEmailContent("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка отправки",
+        description: error.message || "Не удалось отправить рассылку",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const activeCount = subscriptions.filter((s) => s.is_active).length;
   const inactiveCount = subscriptions.filter((s) => !s.is_active).length;
 
   return (
     <div className="p-6 md:p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-condensed font-bold">Email-рассылка</h1>
-        <p className="text-muted-foreground">Управление подписчиками на рассылку новостей</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-condensed font-bold">Email-рассылка</h1>
+          <p className="text-muted-foreground">Управление подписчиками на рассылку новостей</p>
+        </div>
+        <Button onClick={() => setShowComposeDialog(true)} className="gap-2">
+          <PenLine className="h-4 w-4" />
+          Создать рассылку
+        </Button>
       </div>
 
       {/* Stats */}
@@ -249,6 +300,55 @@ export default function AdminNewsletter() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Compose Newsletter Dialog */}
+      <Dialog open={showComposeDialog} onOpenChange={setShowComposeDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              Создать рассылку
+            </DialogTitle>
+            <DialogDescription>
+              Рассылка будет отправлена всем активным подписчикам ({activeCount} чел.)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Тема письма</label>
+              <Input
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="Новости недели..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Текст письма</label>
+              <Textarea
+                value={emailContent}
+                onChange={(e) => setEmailContent(e.target.value)}
+                placeholder="Содержание рассылки..."
+                rows={8}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowComposeDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleSendNewsletter} disabled={isSending}>
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Отправить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

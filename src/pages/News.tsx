@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -8,7 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Tag } from "lucide-react";
+import { TagBadge } from "@/components/tags/TagBadge";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -16,6 +16,7 @@ export default function News() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = parseInt(searchParams.get("page") || "1");
   const selectedCategory = searchParams.get("category") || "all";
+  const selectedTag = searchParams.get("tag") || "";
 
   // Fetch categories
   const { data: categories } = useQuery({
@@ -32,10 +33,63 @@ export default function News() {
     },
   });
 
+  // Fetch tags
+  const { data: tags } = useQuery({
+    queryKey: ["tags", "news"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tags")
+        .select("id, name, slug")
+        .eq("type", "news")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Fetch news with pagination
   const { data: newsData, isLoading } = useQuery({
-    queryKey: ["news", selectedCategory, currentPage],
+    queryKey: ["news", selectedCategory, selectedTag, currentPage],
     queryFn: async () => {
+      // If filtering by tag, we need a different approach
+      if (selectedTag) {
+        const tag = tags?.find((t) => t.slug === selectedTag);
+        if (!tag) return { news: [], total: 0 };
+
+        // Get news IDs that have this tag
+        const { data: taggedNews } = await supabase
+          .from("news_tags")
+          .select("news_id")
+          .eq("tag_id", tag.id);
+
+        if (!taggedNews?.length) return { news: [], total: 0 };
+
+        const newsIds = taggedNews.map((t) => t.news_id);
+
+        let query = supabase
+          .from("news")
+          .select("*, categories(name, slug)", { count: "exact" })
+          .eq("status", "published")
+          .in("id", newsIds)
+          .order("published_at", { ascending: false });
+
+        if (selectedCategory !== "all") {
+          const category = categories?.find((c) => c.slug === selectedCategory);
+          if (category) {
+            query = query.eq("category_id", category.id);
+          }
+        }
+
+        const from = (currentPage - 1) * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+
+        const { data, error, count } = await query.range(from, to);
+        if (error) throw error;
+        return { news: data, total: count || 0 };
+      }
+
+      // Standard query without tag filter
       let query = supabase
         .from("news")
         .select("*, categories(name, slug)", { count: "exact" })
@@ -57,17 +111,29 @@ export default function News() {
       if (error) throw error;
       return { news: data, total: count || 0 };
     },
-    enabled: !!categories || selectedCategory === "all",
+    enabled: (!!categories || selectedCategory === "all") && (!!tags || !selectedTag),
   });
 
   const totalPages = Math.ceil((newsData?.total || 0) / ITEMS_PER_PAGE);
 
   const handleCategoryChange = (categorySlug: string) => {
-    setSearchParams({ category: categorySlug, page: "1" });
+    setSearchParams({ category: categorySlug, page: "1", ...(selectedTag && { tag: selectedTag }) });
+  };
+
+  const handleTagChange = (tagSlug: string) => {
+    if (tagSlug === selectedTag) {
+      // Deselect tag
+      const params: Record<string, string> = { category: selectedCategory, page: "1" };
+      setSearchParams(params);
+    } else {
+      setSearchParams({ category: selectedCategory, tag: tagSlug, page: "1" });
+    }
   };
 
   const handlePageChange = (page: number) => {
-    setSearchParams({ category: selectedCategory, page: page.toString() });
+    const params: Record<string, string> = { category: selectedCategory, page: page.toString() };
+    if (selectedTag) params.tag = selectedTag;
+    setSearchParams(params);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -85,7 +151,7 @@ export default function News() {
         </div>
 
         {/* Category Filters */}
-        <div className="flex flex-wrap gap-2 mb-6 md:mb-8">
+        <div className="flex flex-wrap gap-2 mb-4">
           <Button
             variant={selectedCategory === "all" ? "default" : "outline"}
             size="sm"
@@ -106,6 +172,36 @@ export default function News() {
             </Button>
           ))}
         </div>
+
+        {/* Tag Filters */}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 md:mb-8">
+            <Tag className="h-4 w-4 text-muted-foreground" />
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => handleTagChange(tag.slug)}
+                className="focus:outline-none"
+              >
+                <TagBadge
+                  name={tag.name}
+                  slug={tag.slug}
+                  isActive={selectedTag === tag.slug}
+                />
+              </button>
+            ))}
+            {selectedTag && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleTagChange(selectedTag)}
+                className="text-xs h-6"
+              >
+                Сбросить тег
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* News Grid */}
         {isLoading ? (
@@ -143,7 +239,7 @@ export default function News() {
         ) : (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">
-              Новостей в этой категории пока нет
+              {selectedTag ? "Новостей с этим тегом пока нет" : "Новостей в этой категории пока нет"}
             </p>
           </div>
         )}
@@ -163,7 +259,6 @@ export default function News() {
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((page) => {
-                  // Show first, last, current, and adjacent pages
                   if (page === 1 || page === totalPages) return true;
                   if (Math.abs(page - currentPage) <= 1) return true;
                   return false;
