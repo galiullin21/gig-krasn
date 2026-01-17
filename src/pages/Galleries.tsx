@@ -6,10 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Image, Eye, Images } from "lucide-react";
+import { Image, Images } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 16;
 
 export default function Galleries() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,13 +41,13 @@ export default function Galleries() {
 
   const totalPages = Math.ceil((galleriesData?.total || 0) / ITEMS_PER_PAGE);
 
-  const handleTypeChange = (type: string) => {
-    setSearchParams({ type, page: "1" });
-  };
-
   const handlePageChange = (page: number) => {
     setSearchParams({ type: selectedType, page: page.toString() });
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLoadMore = () => {
+    handlePageChange(currentPage + 1);
   };
 
   const getImageCount = (images: unknown) => {
@@ -57,96 +57,89 @@ export default function Galleries() {
 
   return (
     <Layout>
-      <div className="container py-6 md:py-8">
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-condensed font-bold text-foreground">
-            Фотогалерея
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Фоторепортажи и галереи событий города
-          </p>
+      {/* Hero Banner */}
+      <div className="bg-primary text-primary-foreground py-8">
+        <div className="container">
+          <div className="h-20 flex items-center justify-center text-xl opacity-70">
+            Рекламный баннер
+          </div>
         </div>
+      </div>
 
-        {/* Type Filter */}
-        <div className="flex flex-wrap gap-2 mb-6 md:mb-8">
-          <Button
-            variant={selectedType === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleTypeChange("all")}
-            className="rounded-full"
-          >
-            Все галереи
-          </Button>
-          <Button
-            variant={selectedType === "gallery" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleTypeChange("gallery")}
-            className="rounded-full"
-          >
+      <div className="container py-6 md:py-8">
+        {/* Page Header */}
+        <div className="mb-6 border-b-4 border-primary pb-2 inline-block">
+          <h1 className="text-2xl md:text-3xl font-condensed font-bold text-foreground">
             Фотогалереи
-          </Button>
-          <Button
-            variant={selectedType === "reportage" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleTypeChange("reportage")}
-            className="rounded-full"
-          >
-            Фоторепортажи
-          </Button>
+          </h1>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="aspect-[4/3] rounded-lg" />
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-4 w-1/2" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="aspect-square rounded-lg" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-1/2" />
               </div>
             ))}
           </div>
         ) : galleriesData?.galleries && galleriesData.galleries.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleriesData.galleries.map((gallery) => (
-              <Link
-                key={gallery.id}
-                to={`/galleries/${gallery.slug}`}
-                className="group"
-              >
-                <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted mb-3 relative">
-                  {gallery.cover_image ? (
-                    <OptimizedImage
-                      src={gallery.cover_image}
-                      alt={gallery.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <Image className="w-12 h-12 text-primary/40" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {galleriesData.galleries.map((gallery, index) => {
+              // Every 4th item in each row is an ad placeholder
+              const isAd = (index + 1) % 4 === 0;
+              
+              if (isAd && index < 4) {
+                return (
+                  <div key={`ad-${index}`} className="flex flex-col">
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center text-muted-foreground text-sm">
+                      Реклама
                     </div>
-                  )}
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                    <Images className="w-3 h-3" />
-                    {getImageCount(gallery.images)}
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      <p className="line-clamp-2">Здесь может быть размещено ваше рекламное объявление</p>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>РЕКЛАМА</span>
+                      <span>{format(new Date(), "d.MM.yyyy", { locale: ru })}</span>
+                    </div>
                   </div>
-                </div>
-                <h3 className="font-condensed font-bold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-                  {gallery.title}
-                </h3>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
-                  <span>
-                    {gallery.published_at
-                      ? format(new Date(gallery.published_at), "d MMMM yyyy", { locale: ru })
-                      : ""}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {gallery.views_count || 0}
-                  </span>
-                </div>
-              </Link>
-            ))}
+                );
+              }
+              
+              return (
+                <Link
+                  key={gallery.id}
+                  to={`/galleries/${gallery.slug}`}
+                  className="group flex flex-col"
+                >
+                  <div className="aspect-square overflow-hidden rounded-lg bg-muted relative">
+                    {gallery.cover_image ? (
+                      <OptimizedImage
+                        src={gallery.cover_image}
+                        alt={gallery.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <Image className="w-12 h-12 text-primary/40" />
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors mt-2">
+                    {gallery.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                    <span>
+                      {gallery.published_at
+                        ? format(new Date(gallery.published_at), "d.MM.yyyy", { locale: ru })
+                        : ""}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -155,34 +148,16 @@ export default function Galleries() {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
+        {/* Load More Button */}
+        {currentPage < totalPages && galleriesData && galleriesData.galleries.length > 0 && (
+          <div className="flex justify-center mt-8">
             <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
+              variant="default"
+              size="lg"
+              onClick={handleLoadMore}
+              className="px-12 rounded-full"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="icon"
-                onClick={() => handlePageChange(page)}
-                className="w-10 h-10"
-              >
-                {page}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
+              Больше галерей
             </Button>
           </div>
         )}
