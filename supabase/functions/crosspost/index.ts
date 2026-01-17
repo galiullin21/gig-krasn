@@ -111,9 +111,17 @@ Deno.serve(async (req) => {
         throw new Error(`Unknown content type: ${content_type}`);
     }
 
+    // Select only columns that exist in each table
+    let selectColumns = "title, slug, cover_image";
+    if (content_type === "news" || content_type === "blog") {
+      selectColumns = "title, slug, lead, content, cover_image";
+    } else if (content_type === "gallery") {
+      selectColumns = "title, slug, cover_image, type";
+    }
+
     const { data, error } = await supabase
       .from(tableName)
-      .select("title, slug, lead, content, cover_image, type")
+      .select(selectColumns)
       .eq("id", content_id)
       .single();
 
@@ -121,7 +129,7 @@ Deno.serve(async (req) => {
       throw new Error(`Content not found: ${error?.message}`);
     }
 
-    contentData = data as ContentData;
+    contentData = data as unknown as ContentData;
 
     // Build the post message
     const siteUrl = "https://gig-krasn.lovable.app";
