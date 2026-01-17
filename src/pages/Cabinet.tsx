@@ -84,10 +84,10 @@ export default function Cabinet() {
           </Button>
         </div>
 
-        {/* Warnings */}
-        <UserWarnings userId={user.id} />
-
-        {/* Profile Card */}
+        {/* Warnings - only show to the user in their own cabinet */}
+        <div className="mb-6">
+          <UserWarnings userId={user.id} />
+        </div>
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">

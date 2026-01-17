@@ -162,8 +162,33 @@ export default function AdminUsersList() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      // Delete in correct order to avoid foreign key issues
+      // 1. Delete warning messages first
+      await supabase.from("warning_messages")
+        .delete()
+        .in("warning_id", 
+          (await supabase.from("user_warnings").select("id").eq("user_id", userId)).data?.map(w => w.id) || []
+        );
+      
+      // 2. Delete warnings
       await supabase.from("user_warnings").delete().eq("user_id", userId);
+      
+      // 3. Delete reactions
+      await supabase.from("reactions").delete().eq("user_id", userId);
+      
+      // 4. Delete comments
+      await supabase.from("comments").delete().eq("user_id", userId);
+      
+      // 5. Delete notifications
+      await supabase.from("notifications").delete().eq("user_id", userId);
+      
+      // 6. Delete user preferences
+      await supabase.from("user_preferences").delete().eq("user_id", userId);
+      
+      // 7. Delete roles
       await supabase.from("user_roles").delete().eq("user_id", userId);
+      
+      // 8. Delete profile
       const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
       if (error) throw error;
     },
@@ -172,8 +197,9 @@ export default function AdminUsersList() {
       toast({ title: "Профиль удалён" });
       setDeleteId(null);
     },
-    onError: () => {
-      toast({ title: "Ошибка удаления", variant: "destructive" });
+    onError: (error) => {
+      console.error("Delete error:", error);
+      toast({ title: "Ошибка удаления", description: "Попробуйте ещё раз", variant: "destructive" });
     },
   });
 
