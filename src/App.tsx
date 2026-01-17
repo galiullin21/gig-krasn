@@ -96,6 +96,11 @@ const App = () => (
                 <Route path="/contacts" element={<Contacts />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/map" element={<CityMap />} />
+                <Route path="/directory" element={<Directory />} />
+                <Route path="/emergency" element={<EmergencyServices />} />
+                <Route path="/special-projects" element={<SpecialProjects />} />
+                <Route path="/advertising" element={<Advertising />} />
+                <Route path="/where-to-buy" element={<WhereToBuy />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>
