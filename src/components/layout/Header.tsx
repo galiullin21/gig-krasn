@@ -96,11 +96,11 @@ export function Header() {
       {/* Top bar - Red */}
       <div className="bg-primary text-primary-foreground">
         <div className="container flex items-center justify-between h-12 md:h-14">
-          {/* Mobile menu button */}
+          {/* Menu button - visible on all devices */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden h-10 w-10 text-primary-foreground hover:bg-primary-foreground/10"
+            className="h-10 w-10 text-primary-foreground hover:bg-primary-foreground/10"
             onClick={() => setIsMenuOpen(true)}
           >
             <Menu className="w-6 h-6" />
