@@ -18,5 +18,14 @@ verify_jwt = false
 [functions.import-documents]
 verify_jwt = false
 
+[functions.import-news]
+verify_jwt = false
+
+[functions.import-blogs]
+verify_jwt = false
+
+[functions.import-galleries]
+verify_jwt = false
+
 [functions.delete-user]
 verify_jwt = false
