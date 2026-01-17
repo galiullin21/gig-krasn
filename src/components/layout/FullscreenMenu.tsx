@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { X, Search } from "lucide-react";
+import { X, Search, Newspaper, FileText, Star, Camera, Video, FolderOpen, BookOpen, Phone, Megaphone, Archive, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -155,11 +155,13 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           {/* Новости с подменю */}
           <button
             onClick={() => setActiveSubmenu(activeSubmenu === "news" ? null : "news")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+            className={`flex items-center gap-3 w-full text-left text-lg font-medium py-2 transition-colors ${
               activeSubmenu === "news" ? "text-white" : "text-white/80 hover:text-white"
             }`}
           >
-            НОВОСТИ {activeSubmenu === "news" ? "▼" : "▶"}
+            <Newspaper className="w-5 h-5" />
+            <span className="flex-1">НОВОСТИ</span>
+            {activeSubmenu === "news" ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
           {activeSubmenu === "news" && (
             <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
@@ -182,11 +184,13 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           {/* Статьи с подменю */}
           <button
             onClick={() => setActiveSubmenu(activeSubmenu === "articles" ? null : "articles")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+            className={`flex items-center gap-3 w-full text-left text-lg font-medium py-2 transition-colors ${
               activeSubmenu === "articles" ? "text-white" : "text-white/80 hover:text-white"
             }`}
           >
-            СТАТЬИ {activeSubmenu === "articles" ? "▼" : "▶"}
+            <FileText className="w-5 h-5" />
+            <span className="flex-1">СТАТЬИ</span>
+            {activeSubmenu === "articles" ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
           {activeSubmenu === "articles" && (
             <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
@@ -209,11 +213,13 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           {/* Спецпроекты с подменю */}
           <button
             onClick={() => setActiveSubmenu(activeSubmenu === "specprojects" ? null : "specprojects")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+            className={`flex items-center gap-3 w-full text-left text-lg font-medium py-2 transition-colors ${
               activeSubmenu === "specprojects" ? "text-white" : "text-white/80 hover:text-white"
             }`}
           >
-            СПЕЦПРОЕКТЫ {activeSubmenu === "specprojects" ? "▼" : "▶"}
+            <Star className="w-5 h-5" />
+            <span className="flex-1">СПЕЦПРОЕКТЫ</span>
+            {activeSubmenu === "specprojects" ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
           {activeSubmenu === "specprojects" && (
             <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
@@ -234,27 +240,31 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           <Link
             to="/galleries"
             onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-3 text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
+            <Camera className="w-5 h-5" />
             ФОТО
           </Link>
 
           <Link
             to="/galleries?type=video"
             onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-3 text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
+            <Video className="w-5 h-5" />
             ВИДЕО
           </Link>
 
           {/* Документы с подменю */}
           <button
             onClick={() => setActiveSubmenu(activeSubmenu === "documents" ? null : "documents")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+            className={`flex items-center gap-3 w-full text-left text-lg font-medium py-2 transition-colors ${
               activeSubmenu === "documents" ? "text-white" : "text-white/80 hover:text-white"
             }`}
           >
-            ДОКУМЕНТЫ {activeSubmenu === "documents" ? "▼" : "▶"}
+            <FolderOpen className="w-5 h-5" />
+            <span className="flex-1">ДОКУМЕНТЫ</span>
+            {activeSubmenu === "documents" ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
           {activeSubmenu === "documents" && (
             <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
@@ -277,11 +287,13 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           {/* Справочная с подменю */}
           <button
             onClick={() => setActiveSubmenu(activeSubmenu === "directory" ? null : "directory")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+            className={`flex items-center gap-3 w-full text-left text-lg font-medium py-2 transition-colors ${
               activeSubmenu === "directory" ? "text-white" : "text-white/80 hover:text-white"
             }`}
           >
-            СПРАВОЧНАЯ {activeSubmenu === "directory" ? "▼" : "▶"}
+            <BookOpen className="w-5 h-5" />
+            <span className="flex-1">СПРАВОЧНАЯ</span>
+            {activeSubmenu === "directory" ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
           {activeSubmenu === "directory" && (
             <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
@@ -302,24 +314,27 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           <Link
             to="/emergency"
             onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-3 text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
+            <Phone className="w-5 h-5" />
             ЭКСТРЕННЫЕ СЛУЖБЫ
           </Link>
 
           <Link
             to="/advertising"
             onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-3 text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
+            <Megaphone className="w-5 h-5" />
             РЕКЛАМОДАТЕЛЯМ
           </Link>
 
           <Link
             to="/archive"
             onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-3 text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
+            <Archive className="w-5 h-5" />
             АРХИВ
           </Link>
         </nav>
