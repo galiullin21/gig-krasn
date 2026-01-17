@@ -8,6 +8,8 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Eye, Calendar, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ReactionButtons } from "@/components/reactions/ReactionButtons";
+import { CommentsSection } from "@/components/comments/CommentsSection";
 
 export default function NewsDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -164,6 +166,15 @@ export default function NewsDetail() {
           className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-condensed prose-a:text-primary"
           dangerouslySetInnerHTML={{ __html: news.content || "" }}
         />
+
+        {/* Reactions */}
+        <div className="flex items-center gap-4 mt-8 pt-6 border-t">
+          <span className="text-sm text-muted-foreground">Оцените материал:</span>
+          <ReactionButtons contentType="news" contentId={news.id} />
+        </div>
+
+        {/* Comments */}
+        <CommentsSection contentType="news" contentId={news.id} />
 
         {/* Similar news */}
         {similarNews && similarNews.length > 0 && (
