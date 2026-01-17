@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -239,7 +240,7 @@ export default function NewsDetail() {
         {/* Content */}
         <div
           className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-condensed prose-a:text-primary"
-          dangerouslySetInnerHTML={{ __html: news.content || "" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(news.content || "") }}
         />
 
         {/* Attached Documents */}
