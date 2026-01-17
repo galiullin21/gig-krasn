@@ -207,9 +207,10 @@ ${description}
           }
         }
         
-        // Post to wall
+        // Post to wall - ensure group ID is a clean number with minus prefix
+        const cleanGroupId = vkGroupId.replace(/[^0-9]/g, "");
         const vkParams = new URLSearchParams({
-          owner_id: `-${vkGroupId}`,
+          owner_id: `-${cleanGroupId}`,
           from_group: "1",
           message: message,
           access_token: vkToken,
