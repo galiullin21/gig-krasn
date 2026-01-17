@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, User, Menu, X, Crown, LogOut, Bell } from "lucide-react";
+import { Search, User, Menu, Crown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "./NotificationBell";
+import { FullscreenMenu } from "./FullscreenMenu";
 import { useAuth } from "@/hooks/useAuth";
 
 // Social icons
@@ -262,176 +262,8 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu Sheet */}
-      <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-        <SheetContent side="left" className="w-full max-w-md p-0 bg-primary">
-          <div className="h-full overflow-y-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-primary-foreground/10">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <X className="w-6 h-6" />
-              </Button>
-              <Link to="/" className="flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
-                <span className="text-primary-foreground/60 text-xl">°</span>
-                <span className="text-2xl font-bold font-condensed text-primary-foreground">
-                  ГиГ
-                </span>
-              </Link>
-              <div className="text-primary-foreground text-sm">
-                <span className="font-medium">Железногорск, Красноярский край</span>
-              </div>
-            </div>
-
-            {/* Menu content */}
-            <div className="p-6 text-primary-foreground">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Main menu */}
-                <div>
-                  <nav className="space-y-4">
-                    {mainMenu.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="block text-lg font-medium hover:opacity-80 transition-opacity"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </nav>
-
-                  {/* Latest issue */}
-                  <div className="mt-8">
-                    <h4 className="text-sm font-bold uppercase mb-4">Свежий номер/Купить подписку</h4>
-                    <Link 
-                      to="/archive" 
-                      onClick={() => setIsMenuOpen(false)}
-                      className="block"
-                    >
-                      <div className="bg-primary-foreground/10 rounded-lg p-4 hover:bg-primary-foreground/20 transition-colors">
-                        <p className="text-sm">Город и горожане</p>
-                        <p className="text-xs opacity-70">Последний выпуск</p>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Categories */}
-                <div className="grid grid-cols-2 gap-8">
-                  {/* News categories */}
-                  <div>
-                    <h4 className="font-bold mb-4">НОВОСТИ</h4>
-                    <nav className="space-y-2 text-sm">
-                      {menuCategories.news.map((cat) => (
-                        <Link
-                          key={cat}
-                          to={`/news?category=${encodeURIComponent(cat.toLowerCase())}`}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="block hover:opacity-80 transition-opacity"
-                        >
-                          {cat}
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-
-                  {/* Articles categories */}
-                  <div>
-                    <h4 className="font-bold mb-4">СТАТЬИ</h4>
-                    <nav className="space-y-2 text-sm">
-                      {menuCategories.articles.map((cat) => (
-                        <Link
-                          key={cat}
-                          to={`/blogs?category=${encodeURIComponent(cat.toLowerCase())}`}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="block hover:opacity-80 transition-opacity"
-                        >
-                          {cat}
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-                </div>
-              </div>
-
-              {/* Documents by year */}
-              <div className="mt-8 pt-6 border-t border-primary-foreground/10">
-                <h4 className="font-bold mb-4">ДОКУМЕНТЫ</h4>
-                <div className="flex flex-wrap gap-2">
-                  {[2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016].map((year) => (
-                    <Link
-                      key={year}
-                      to={`/documents?year=${year}`}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="px-3 py-1 text-sm border border-primary-foreground/20 rounded hover:bg-primary-foreground/10 transition-colors"
-                    >
-                      {year}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* User section */}
-              <div className="mt-8 pt-6 border-t border-primary-foreground/10">
-                {user ? (
-                  <div className="space-y-3">
-                    <Link
-                      to="/notifications"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2 hover:opacity-80"
-                    >
-                      <Bell className="w-5 h-5" />
-                      Уведомления
-                    </Link>
-                    <Link
-                      to="/cabinet"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2 hover:opacity-80"
-                    >
-                      <User className="w-5 h-5" />
-                      Личный кабинет
-                    </Link>
-                    {isEditor && (
-                      <Link
-                        to="/admin"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-2 hover:opacity-80"
-                      >
-                        <Crown className="w-5 h-5" />
-                        {isAdmin ? "Админ-панель" : "Редактирование"}
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => {
-                        signOut();
-                        setIsMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      Выйти
-                    </button>
-                  </div>
-                ) : (
-                  <Link
-                    to="/auth"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 hover:opacity-80"
-                  >
-                    <User className="w-5 h-5" />
-                    Войти
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Fullscreen Menu */}
+      <FullscreenMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </header>
   );
 }
