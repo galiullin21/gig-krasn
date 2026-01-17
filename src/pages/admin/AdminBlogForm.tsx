@@ -8,12 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,6 +30,7 @@ import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { useCrosspost } from "@/hooks/useCrosspost";
 
 const blogSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
@@ -51,6 +50,7 @@ export default function AdminBlogForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { crosspost } = useCrosspost();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<BlogFormData>({
@@ -114,6 +114,9 @@ export default function AdminBlogForm() {
   const onSubmit = async (data: BlogFormData) => {
     setIsSubmitting(true);
     try {
+      const wasPublished = blogItem?.status === "published";
+      const isPublishing = data.status === "published" && !wasPublished;
+
       const payload = {
         title: data.title,
         slug: data.slug,
@@ -125,6 +128,8 @@ export default function AdminBlogForm() {
         published_at: data.status === "published" ? new Date().toISOString() : null,
       };
 
+      let contentId = id;
+
       if (isEditing) {
         const { error } = await supabase
           .from("blogs")
@@ -133,9 +138,19 @@ export default function AdminBlogForm() {
         if (error) throw error;
         toast({ title: "Блог обновлён" });
       } else {
-        const { error } = await supabase.from("blogs").insert([payload]);
+        const { data: insertData, error } = await supabase
+          .from("blogs")
+          .insert([payload])
+          .select("id")
+          .single();
         if (error) throw error;
+        contentId = insertData.id;
         toast({ title: "Блог создан" });
+      }
+
+      // Кросс-постинг при публикации
+      if (isPublishing && contentId) {
+        crosspost("blog", contentId);
       }
 
       queryClient.invalidateQueries({ queryKey: ["admin-blogs"] });
