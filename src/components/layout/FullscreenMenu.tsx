@@ -142,23 +142,21 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
 
         {/* Main navigation */}
         <nav className="flex-1 p-6 space-y-1 overflow-y-auto">
-          <button
-            onClick={() => setActiveSubmenu(activeSubmenu === "news" ? null : "news")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
-              activeSubmenu === "news" ? "text-white" : "text-white/80 hover:text-white"
-            }`}
+          <Link
+            to="/news"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
-            НОВОСТИ {activeSubmenu === "news" && "←"}
-          </button>
+            НОВОСТИ
+          </Link>
           
-          <button
-            onClick={() => setActiveSubmenu(activeSubmenu === "articles" ? null : "articles")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
-              activeSubmenu === "articles" ? "text-white" : "text-white/80 hover:text-white"
-            }`}
+          <Link
+            to="/blogs"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
             СТАТЬИ
-          </button>
+          </Link>
 
           <Link
             to="/special-projects"
@@ -184,23 +182,21 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
             ВИДЕО
           </Link>
 
-          <button
-            onClick={() => setActiveSubmenu(activeSubmenu === "documents" ? null : "documents")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
-              activeSubmenu === "documents" ? "text-white" : "text-white/80 hover:text-white"
-            }`}
+          <Link
+            to="/documents"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
             ДОКУМЕНТЫ
-          </button>
+          </Link>
 
-          <button
-            onClick={() => setActiveSubmenu(activeSubmenu === "directory" ? null : "directory")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
-              activeSubmenu === "directory" ? "text-white" : "text-white/80 hover:text-white"
-            }`}
+          <Link
+            to="/directory"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
             СПРАВОЧНАЯ
-          </button>
+          </Link>
 
           <Link
             to="/advertising"
