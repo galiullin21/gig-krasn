@@ -117,6 +117,17 @@ export function Footer() {
           <p className="mt-1">
             Свидетельство о регистрации СМИ ПИ № ТУ24-00000 от 01.01.2020
           </p>
+          <p className="mt-3 text-white/70">
+            Разработка и дизайн —{" "}
+            <a 
+              href="https://t.me/galiullin_ruzal" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              Рузаль Галиуллин
+            </a>
+          </p>
         </div>
       </div>
     </footer>
