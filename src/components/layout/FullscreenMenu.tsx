@@ -50,8 +50,18 @@ const newsCategories = [
 const directoryItems = [
   { name: "Сайты города", href: "/directory" },
   { name: "Экстренные службы", href: "/emergency" },
-  { name: "Аварийные службы", href: "/emergency#emergency-services" },
   { name: "Где купить газету", href: "/where-to-buy" },
+];
+
+const specProjectCategories = [
+  { name: "Все проекты", slug: "" },
+  { name: "Общество", slug: "society" },
+  { name: "Спорт", slug: "sport" },
+  { name: "Культура", slug: "culture" },
+  { name: "Персона", slug: "persona" },
+  { name: "СВО", slug: "svo" },
+  { name: "Город", slug: "city" },
+  { name: "Здоровье", slug: "health" },
 ];
 
 const documentYears = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016];
@@ -142,30 +152,85 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
 
         {/* Main navigation */}
         <nav className="flex-1 p-6 space-y-1 overflow-y-auto">
-          <Link
-            to="/news"
-            onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          {/* Новости с подменю */}
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "news" ? null : "news")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "news" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
           >
-            НОВОСТИ
-          </Link>
+            НОВОСТИ {activeSubmenu === "news" ? "▼" : "▶"}
+          </button>
+          {activeSubmenu === "news" && (
+            <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
+              <Link to="/news" onClick={handleLinkClick} className="block text-sm py-1 text-white/70 hover:text-white">
+                Все новости
+              </Link>
+              {newsCategories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/news?category=${cat.slug}`}
+                  onClick={handleLinkClick}
+                  className="block text-sm py-1 text-white/70 hover:text-white"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          )}
           
-          <Link
-            to="/blogs"
-            onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          {/* Статьи с подменю */}
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "articles" ? null : "articles")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "articles" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
           >
-            СТАТЬИ
-          </Link>
+            СТАТЬИ {activeSubmenu === "articles" ? "▼" : "▶"}
+          </button>
+          {activeSubmenu === "articles" && (
+            <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
+              <Link to="/blogs" onClick={handleLinkClick} className="block text-sm py-1 text-white/70 hover:text-white">
+                Все статьи
+              </Link>
+              {newsCategories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/blogs?category=${cat.slug}`}
+                  onClick={handleLinkClick}
+                  className="block text-sm py-1 text-white/70 hover:text-white"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          )}
 
-          <Link
-            to="/special-projects"
-            onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          {/* Спецпроекты с подменю */}
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "specprojects" ? null : "specprojects")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "specprojects" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
           >
-            СПЕЦПРОЕКТЫ
-          </Link>
+            СПЕЦПРОЕКТЫ {activeSubmenu === "specprojects" ? "▼" : "▶"}
+          </button>
+          {activeSubmenu === "specprojects" && (
+            <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
+              {specProjectCategories.map((cat) => (
+                <Link
+                  key={cat.slug || "all"}
+                  to={cat.slug ? `/special-projects?category=${cat.slug}` : "/special-projects"}
+                  onClick={handleLinkClick}
+                  className="block text-sm py-1 text-white/70 hover:text-white"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          )}
 
+          {/* Медиа */}
           <Link
             to="/galleries"
             onClick={handleLinkClick}
@@ -182,20 +247,64 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
             ВИДЕО
           </Link>
 
-          <Link
-            to="/documents"
-            onClick={handleLinkClick}
-            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          {/* Документы с подменю */}
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "documents" ? null : "documents")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "documents" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
           >
-            ДОКУМЕНТЫ
-          </Link>
+            ДОКУМЕНТЫ {activeSubmenu === "documents" ? "▼" : "▶"}
+          </button>
+          {activeSubmenu === "documents" && (
+            <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
+              <Link to="/documents" onClick={handleLinkClick} className="block text-sm py-1 text-white/70 hover:text-white">
+                Все документы
+              </Link>
+              {documentYears.slice(0, 5).map((year) => (
+                <Link
+                  key={year}
+                  to={`/documents?year=${year}`}
+                  onClick={handleLinkClick}
+                  className="block text-sm py-1 text-white/70 hover:text-white"
+                >
+                  {year}
+                </Link>
+              ))}
+            </div>
+          )}
 
+          {/* Справочная с подменю */}
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "directory" ? null : "directory")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "directory" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
+          >
+            СПРАВОЧНАЯ {activeSubmenu === "directory" ? "▼" : "▶"}
+          </button>
+          {activeSubmenu === "directory" && (
+            <div className="pl-4 space-y-1 border-l border-white/20 ml-2">
+              {directoryItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={handleLinkClick}
+                  className="block text-sm py-1 text-white/70 hover:text-white"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Простые ссылки */}
           <Link
-            to="/directory"
+            to="/emergency"
             onClick={handleLinkClick}
             className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
-            СПРАВОЧНАЯ
+            ЭКСТРЕННЫЕ СЛУЖБЫ
           </Link>
 
           <Link
