@@ -16,7 +16,7 @@ interface ArchiveEntry {
   title: string;
   url: string;
   year: number;
-  issue_number: number;
+  issue_number: string;
   date: string;
   filename: string;
 }

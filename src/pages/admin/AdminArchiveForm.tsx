@@ -15,7 +15,7 @@ import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ArrowLeft, Upload, FileText } from "lucide-react";
 
 const archiveSchema = z.object({
-  issue_number: z.number().min(1, "Введите номер выпуска"),
+  issue_number: z.string().min(1, "Введите номер выпуска"),
   issue_date: z.string().min(1, "Выберите дату выпуска"),
   year: z.number().min(1900).max(2100),
   pdf_url: z.string().min(1, "Загрузите PDF файл"),
@@ -37,7 +37,7 @@ export default function AdminArchiveForm() {
   const form = useForm<ArchiveFormData>({
     resolver: zodResolver(archiveSchema),
     defaultValues: {
-      issue_number: 1,
+      issue_number: "",
       issue_date: new Date().toISOString().split("T")[0],
       year: new Date().getFullYear(),
       pdf_url: "",
@@ -63,7 +63,7 @@ export default function AdminArchiveForm() {
   useEffect(() => {
     if (archive) {
       form.reset({
-        issue_number: archive.issue_number,
+        issue_number: archive.issue_number || "",
         issue_date: archive.issue_date,
         year: archive.year,
         pdf_url: archive.pdf_url,
@@ -181,8 +181,8 @@ export default function AdminArchiveForm() {
                 <Label htmlFor="issue_number">Номер выпуска</Label>
                 <Input
                   id="issue_number"
-                  type="number"
-                  {...form.register("issue_number", { valueAsNumber: true })}
+                  type="text"
+                  {...form.register("issue_number")}
                 />
                 {form.formState.errors.issue_number && (
                   <p className="text-sm text-destructive">{form.formState.errors.issue_number.message}</p>
