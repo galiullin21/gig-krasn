@@ -111,13 +111,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:text-white transition-colors">
+                <Link to="/contacts" className="hover:text-white transition-colors">
                   О редакции
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-white transition-colors">
-                  О газете
                 </Link>
               </li>
             </ul>
@@ -146,15 +141,16 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-white/10 mt-8 pt-6 text-xs text-white/50">
-          <p className="mb-2">
-            Сетевое издание gig26.ru зарегистрировано в Роскомнадзоре
-          </p>
-          <p className="mb-4">
-            06 апреля 2012 г.{" "}
-            <a href="#" className="text-primary hover:underline">
-              Номер свидетельства Эл № ФС77-49278
-            </a>
-          </p>
+          <div className="md:flex md:justify-between mb-4">
+            <p className="mb-2 md:mb-0">
+              Сетевое издание gig26.ru зарегистрировано в Роскомнадзоре
+              <br />
+              06 апреля 2012 г.{" "}
+              <a href="#" className="text-primary hover:underline">
+                Номер свидетельства Эл № ФС77-49278
+              </a>
+            </p>
+          </div>
           <div className="flex flex-col md:flex-row md:justify-between gap-2">
             <p>© "Город и горожане" 2011-{new Date().getFullYear()}</p>
             <p>При перепечатке материалов ссылка на сайт газеты обязательна</p>
