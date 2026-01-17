@@ -46,6 +46,7 @@ import AdminCrosspost from "./pages/admin/AdminCrosspost";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminMedia from "./pages/admin/AdminMedia";
+import AdminDevLogs from "./pages/admin/AdminDevLogs";
 import GalleryDetail from "./pages/GalleryDetail";
 
 // Component that sets up realtime notifications
@@ -121,6 +122,7 @@ const App = () => (
                   <Route path="newsletter" element={<AdminNewsletter />} />
                   <Route path="media" element={<AdminMedia />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="dev-logs" element={<AdminDevLogs />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />

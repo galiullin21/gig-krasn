@@ -39,7 +39,7 @@ const sidebarItems = [
   { name: "Кросс-постинг", href: "/admin/crosspost", icon: Share2 },
 ];
 
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Terminal } from "lucide-react";
 
 const adminOnlyItems = [
   { name: "Пользователи", href: "/admin/users", icon: Users },
@@ -53,8 +53,12 @@ const adminOnlyItems = [
   { name: "Настройки", href: "/admin/settings", icon: Settings },
 ];
 
+const developerOnlyItems = [
+  { name: "Логи обновлений", href: "/admin/dev-logs", icon: Terminal },
+];
+
 export function AdminLayout() {
-  const { user, isEditor, isAdmin, isLoading } = useAuth();
+  const { user, isEditor, isAdmin, isDeveloper, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -144,6 +148,36 @@ export function AdminLayout() {
                 </p>
               </div>
               {adminOnlyItems.map((item) => {
+                const isActive = location.pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.name}</span>
+                    {isActive && <ChevronRight className="h-4 w-4 ml-auto shrink-0" />}
+                  </Link>
+                );
+              })}
+            </>
+          )}
+
+          {isDeveloper && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Разработка
+                </p>
+              </div>
+              {developerOnlyItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.href);
                 return (
                   <Link
