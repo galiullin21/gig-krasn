@@ -1,39 +1,34 @@
 import { Layout } from "@/components/layout/Layout";
-import { HeroSlider } from "@/components/home/HeroSlider";
 import { AdBanner } from "@/components/home/AdBanner";
-import { BlogsSection } from "@/components/home/BlogsSection";
-import { NewsSection } from "@/components/home/NewsSection";
-import { GalleriesSection } from "@/components/home/GalleriesSection";
+import { ArticlesSection } from "@/components/home/ArticlesSection";
+import { PhotoSection } from "@/components/home/PhotoSection";
+import { NewsSectionRedesign } from "@/components/home/NewsSectionRedesign";
 
 const Index = () => {
   return (
     <Layout>
-      {/* Hero Slider */}
-      <HeroSlider />
-
-      {/* Ad Banner */}
-      <div className="container py-4">
-        <AdBanner position="header" />
+      {/* Top Ad Banner */}
+      <div className="bg-muted">
+        <div className="container py-6">
+          <div className="flex items-center justify-center min-h-[100px] text-muted-foreground">
+            <span>Рекламный баннер</span>
+          </div>
+        </div>
       </div>
 
-      {/* Blogs Section */}
+      {/* Articles Section */}
       <div className="container">
-        <BlogsSection />
+        <ArticlesSection />
       </div>
 
-      {/* News Section */}
+      {/* Photo Galleries Section */}
       <div className="container">
-        <NewsSection />
+        <PhotoSection />
       </div>
 
-      {/* Galleries Section */}
+      {/* News Section with Calendar */}
       <div className="container">
-        <GalleriesSection />
-      </div>
-
-      {/* Bottom Ad */}
-      <div className="container py-8">
-        <AdBanner position="content" />
+        <NewsSectionRedesign />
       </div>
     </Layout>
   );
