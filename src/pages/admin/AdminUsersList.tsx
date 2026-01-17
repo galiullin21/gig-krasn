@@ -162,60 +162,24 @@ export default function AdminUsersList() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Delete in correct order to avoid foreign key issues
-      // 1. Get warning IDs first
-      const { data: warnings } = await supabase
-        .from("user_warnings")
-        .select("id")
-        .eq("user_id", userId);
+      // Use edge function to fully delete user (including auth.users)
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
       
-      const warningIds = warnings?.map(w => w.id) || [];
-      
-      // 2. Delete warning messages if there are warnings
-      if (warningIds.length > 0) {
-        const { error: msgError } = await supabase
-          .from("warning_messages")
-          .delete()
-          .in("warning_id", warningIds);
-        if (msgError) console.error("Warning messages delete error:", msgError);
-      }
-      
-      // 3. Delete warnings
-      const { error: warnError } = await supabase.from("user_warnings").delete().eq("user_id", userId);
-      if (warnError) console.error("Warnings delete error:", warnError);
-      
-      // 4. Delete reactions
-      const { error: reactError } = await supabase.from("reactions").delete().eq("user_id", userId);
-      if (reactError) console.error("Reactions delete error:", reactError);
-      
-      // 5. Delete comments
-      const { error: commError } = await supabase.from("comments").delete().eq("user_id", userId);
-      if (commError) console.error("Comments delete error:", commError);
-      
-      // 6. Delete notifications
-      const { error: notifError } = await supabase.from("notifications").delete().eq("user_id", userId);
-      if (notifError) console.error("Notifications delete error:", notifError);
-      
-      // 7. Delete user preferences
-      const { error: prefError } = await supabase.from("user_preferences").delete().eq("user_id", userId);
-      if (prefError) console.error("Preferences delete error:", prefError);
-      
-      // 8. Delete ALL roles (user can have multiple)
-      const { error: roleError } = await supabase.from("user_roles").delete().eq("user_id", userId);
-      if (roleError) console.error("Roles delete error:", roleError);
-      
-      // 9. Delete profile
-      const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "Профиль удалён" });
+      toast({ title: "Аккаунт полностью удалён" });
       setDeleteId(null);
     },
     onError: (error) => {
       console.error("Delete error:", error);
-      toast({ title: "Ошибка удаления", description: "Попробуйте ещё раз", variant: "destructive" });
+      toast({ title: "Ошибка удаления", description: error.message || "Попробуйте ещё раз", variant: "destructive" });
     },
   });
 
@@ -409,9 +373,9 @@ export default function AdminUsersList() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить профиль?</AlertDialogTitle>
+            <AlertDialogTitle>Удалить аккаунт полностью?</AlertDialogTitle>
             <AlertDialogDescription>
-              Это удалит профиль пользователя, его роли и предупреждения. Аккаунт останется в системе.
+              Это безвозвратно удалит аккаунт пользователя, включая все данные профиля, комментарии, реакции и возможность входа. Пользователь сможет заново зарегистрироваться с этим email.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
