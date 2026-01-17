@@ -51,13 +51,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { email, password, role } = await req.json();
+    const { email, password, role, deleteFirst } = await req.json();
 
     if (!email || !password) {
       return new Response(
         JSON.stringify({ error: "Email and password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Delete existing user if requested
+    if (deleteFirst) {
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(u => u.email === email);
+      if (existingUser) {
+        await supabase.auth.admin.deleteUser(existingUser.id);
+        console.log(`Deleted existing user: ${email}`);
+      }
     }
 
     // Create user using admin API
