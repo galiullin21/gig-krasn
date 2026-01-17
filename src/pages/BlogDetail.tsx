@@ -268,6 +268,7 @@ export default function BlogDetail() {
             contentId={blog.id}
             contentTitle={blog.title}
             contentSlug={blog.slug}
+            contentOwnerId={blog.author_id || undefined}
           />
         </div>
 

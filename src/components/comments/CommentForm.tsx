@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
 import { notifyNewComment } from "@/lib/adminNotifications";
+import { notifyCommentReply } from "@/lib/userNotifications";
 
 interface CommentFormProps {
   contentType: "news" | "blog";
@@ -14,6 +15,7 @@ interface CommentFormProps {
   contentTitle?: string;
   contentSlug?: string;
   parentId?: string;
+  parentUserId?: string; // To notify parent comment owner
   onSuccess?: () => void;
   placeholder?: string;
   autoFocus?: boolean;
@@ -25,6 +27,7 @@ export function CommentForm({
   contentTitle,
   contentSlug,
   parentId,
+  parentUserId,
   onSuccess,
   placeholder = "Напишите комментарий...",
   autoFocus = false,
@@ -49,10 +52,16 @@ export function CommentForm({
 
       if (error) throw error;
 
-      // Send admin notification
+      const userName = profile?.full_name || user.email || "Пользователь";
+
+      // Send admin notification for new comments
       if (contentTitle && contentSlug) {
-        const userName = profile?.full_name || user.email || "Пользователь";
         await notifyNewComment(contentType, contentTitle, contentSlug, userName);
+      }
+
+      // Notify parent comment owner about reply
+      if (parentId && parentUserId && contentSlug) {
+        await notifyCommentReply(parentUserId, userName, contentType, contentSlug);
       }
     },
     onSuccess: () => {

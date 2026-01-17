@@ -141,6 +141,7 @@ export function CommentsSection({ contentType, contentId, contentTitle, contentS
               comment={comment}
               contentType={contentType}
               contentId={contentId}
+              contentSlug={contentSlug}
             />
           ))}
         </div>
