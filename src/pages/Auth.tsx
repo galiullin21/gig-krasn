@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthSettings } from "@/hooks/useAuthSettings";
 import { Loader2, Mail, Phone, ArrowLeft } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const emailLoginSchema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -483,10 +484,9 @@ export default function Auth() {
                     <label htmlFor="new-password" className="text-sm font-medium leading-none">
                       Новый пароль
                     </label>
-                    <Input
+                    <PasswordInput
                       id="new-password"
                       placeholder="••••••"
-                      type="password"
                       {...newPasswordForm.register("password")}
                     />
                     {newPasswordForm.formState.errors.password && (
@@ -499,10 +499,9 @@ export default function Auth() {
                     <label htmlFor="confirm-password" className="text-sm font-medium leading-none">
                       Подтвердите пароль
                     </label>
-                    <Input
+                    <PasswordInput
                       id="confirm-password"
                       placeholder="••••••"
-                      type="password"
                       {...newPasswordForm.register("confirmPassword")}
                     />
                     {newPasswordForm.formState.errors.confirmPassword && (
@@ -691,10 +690,9 @@ export default function Auth() {
                         <label htmlFor="login-password" className="text-sm font-medium leading-none">
                           Пароль
                         </label>
-                        <Input
+                        <PasswordInput
                           id="login-password"
                           placeholder="••••••"
-                          type="password"
                           {...emailLoginForm.register("password")}
                         />
                         {emailLoginForm.formState.errors.password && (
@@ -755,10 +753,9 @@ export default function Auth() {
                         <label htmlFor="signup-password" className="text-sm font-medium leading-none">
                           Пароль
                         </label>
-                        <Input
+                        <PasswordInput
                           id="signup-password"
                           placeholder="••••••"
-                          type="password"
                           {...emailSignupForm.register("password")}
                         />
                         {emailSignupForm.formState.errors.password && (

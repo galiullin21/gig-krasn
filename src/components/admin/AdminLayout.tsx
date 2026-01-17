@@ -36,8 +36,11 @@ const sidebarItems = [
   { name: "Кросс-постинг", href: "/admin/crosspost", icon: Share2 },
 ];
 
+import { MessageSquare } from "lucide-react";
+
 const adminOnlyItems = [
   { name: "Пользователи", href: "/admin/users", icon: Users },
+  { name: "Комментарии", href: "/admin/comments", icon: MessageSquare },
   { name: "Предупреждения", href: "/admin/warnings", icon: AlertTriangle },
   { name: "Действия", href: "/admin/actions", icon: Activity },
   { name: "Уведомления", href: "/admin/notifications", icon: Bell },
