@@ -27,12 +27,59 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const vkToken = Deno.env.get("VK_ACCESS_TOKEN");
     const vkGroupId = Deno.env.get("VK_GROUP_ID");
     const telegramBotToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
     const telegramChannelId = Deno.env.get("TELEGRAM_CHANNEL_ID");
 
+    // Authorization check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid Authorization header");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create client with user's token to verify authentication
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getUser(token);
+
+    if (claimsError || !claimsData.user) {
+      console.error("Token verification failed:", claimsError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.user.id;
+    console.log(`User ${userId} initiating crosspost`);
+
+    // Check if user has admin or editor role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "editor", "developer"]);
+
+    if (roleError || !roleData || roleData.length === 0) {
+      console.error("User lacks required role:", roleError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: "Insufficient permissions" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`User ${userId} authorized with role: ${roleData[0].role}`);
 
     const { content_type, content_id }: CrosspostRequest = await req.json();
 
