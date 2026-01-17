@@ -72,6 +72,9 @@ export default function AdminWarningForm() {
 
     setIsSubmitting(true);
     try {
+      // Get user name for logging
+      const targetUser = users?.find((u) => u.user_id === data.user_id);
+
       // Create warning
       const { error: warningError } = await supabase.from("user_warnings").insert({
         user_id: data.user_id,
@@ -83,7 +86,7 @@ export default function AdminWarningForm() {
       if (warningError) throw warningError;
 
       // Create notification for the user
-      const { error: notificationError } = await supabase.from("notifications").insert({
+      await supabase.from("notifications").insert({
         user_id: data.user_id,
         type: "warning",
         title: "Вы получили предупреждение",
@@ -91,12 +94,20 @@ export default function AdminWarningForm() {
         link: "/cabinet?tab=warnings",
       });
 
-      if (notificationError) {
-        console.error("Failed to create notification:", notificationError);
-      }
+      // Log admin action
+      await supabase.from("admin_actions").insert({
+        admin_id: user.id,
+        action_type: "warning_issued",
+        target_type: "user",
+        target_id: data.user_id,
+        details: {
+          user_name: targetUser?.full_name,
+          reason: data.reason,
+        },
+      });
 
       toast({ title: "Предупреждение выдано" });
-      navigate("/admin/users");
+      navigate("/admin/warnings");
     } catch (error) {
       console.error("Error issuing warning:", error);
       toast({ title: "Ошибка", variant: "destructive" });

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminOnlineIndicator } from "./AdminOnlineIndicator";
 import {
   LayoutDashboard,
   Newspaper,
@@ -17,6 +18,9 @@ import {
   ArrowLeft,
   ChevronRight,
   Megaphone,
+  AlertTriangle,
+  Bell,
+  Activity,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -31,6 +35,9 @@ const sidebarItems = [
 
 const adminOnlyItems = [
   { name: "Пользователи", href: "/admin/users", icon: Users },
+  { name: "Предупреждения", href: "/admin/warnings", icon: AlertTriangle },
+  { name: "Действия", href: "/admin/actions", icon: Activity },
+  { name: "Уведомления", href: "/admin/notifications", icon: Bell },
   { name: "Настройки", href: "/admin/settings", icon: Settings },
 ];
 
@@ -81,6 +88,7 @@ export function AdminLayout() {
           <p className="text-xs text-muted-foreground mt-1">
             {isAdmin ? "Администратор" : "Редактор"}
           </p>
+          <AdminOnlineIndicator className="mt-2" />
         </div>
 
         <ScrollArea className="flex-1">
