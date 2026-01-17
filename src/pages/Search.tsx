@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Search as SearchIcon, Newspaper, BookOpen, FileText, Archive } from "lucide-react";
+import { Search as SearchIcon, Newspaper, BookOpen, FileText, Archive, Image } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
 type SearchResult = {
   id: string;
   title: string;
-  type: "news" | "blog" | "document" | "archive";
+  type: "news" | "blog" | "document" | "archive" | "gallery";
   slug?: string;
   date: string;
   snippet?: string;
@@ -36,81 +36,126 @@ const Search = () => {
     queryFn: async () => {
       if (!query.trim()) return [];
 
-      const searchTerm = `%${query}%`;
-
-      const [newsRes, blogsRes, docsRes, archiveRes] = await Promise.all([
+      // Use textSearch or proper ilike filtering
+      const searchWords = query.trim().toLowerCase().split(/\s+/);
+      
+      const [newsRes, blogsRes, docsRes, archiveRes, galleriesRes] = await Promise.all([
         supabase
           .from("news")
-          .select("id, title, slug, published_at, lead")
+          .select("id, title, slug, published_at, lead, content")
           .eq("status", "published")
-          .or(`title.ilike.${searchTerm},lead.ilike.${searchTerm},content.ilike.${searchTerm}`)
           .order("published_at", { ascending: false })
-          .limit(20),
+          .limit(100),
         supabase
           .from("blogs")
           .select("id, title, slug, published_at, content")
           .eq("status", "published")
-          .or(`title.ilike.${searchTerm},content.ilike.${searchTerm}`)
           .order("published_at", { ascending: false })
-          .limit(20),
+          .limit(100),
         supabase
           .from("documents")
           .select("id, title, description, created_at")
-          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
           .order("created_at", { ascending: false })
-          .limit(20),
+          .limit(100),
         supabase
           .from("newspaper_archive")
           .select("id, issue_number, year, issue_date")
-          .or(`issue_number::text.ilike.${searchTerm},year::text.ilike.${searchTerm}`)
           .order("issue_date", { ascending: false })
-          .limit(20),
+          .limit(100),
+        supabase
+          .from("galleries")
+          .select("id, title, slug, published_at")
+          .not("published_at", "is", null)
+          .order("published_at", { ascending: false })
+          .limit(100),
       ]);
 
       const allResults: SearchResult[] = [];
 
+      // Filter news by search words
       newsRes.data?.forEach((item) => {
-        allResults.push({
-          id: item.id,
-          title: item.title,
-          type: "news",
-          slug: item.slug,
-          date: item.published_at || "",
-          snippet: item.lead || undefined,
-        });
+        const searchText = `${item.title} ${item.lead || ""} ${item.content || ""}`.toLowerCase();
+        const matches = searchWords.every(word => searchText.includes(word));
+        if (matches) {
+          allResults.push({
+            id: item.id,
+            title: item.title,
+            type: "news",
+            slug: item.slug,
+            date: item.published_at || "",
+            snippet: item.lead || undefined,
+          });
+        }
       });
 
+      // Filter blogs
       blogsRes.data?.forEach((item) => {
-        allResults.push({
-          id: item.id,
-          title: item.title,
-          type: "blog",
-          slug: item.slug,
-          date: item.published_at || "",
-          snippet: item.content?.substring(0, 200) || undefined,
-        });
+        const searchText = `${item.title} ${item.content || ""}`.toLowerCase();
+        const matches = searchWords.every(word => searchText.includes(word));
+        if (matches) {
+          allResults.push({
+            id: item.id,
+            title: item.title,
+            type: "blog",
+            slug: item.slug,
+            date: item.published_at || "",
+            snippet: item.content?.replace(/<[^>]*>/g, "").substring(0, 200) || undefined,
+          });
+        }
       });
 
+      // Filter documents
       docsRes.data?.forEach((item) => {
-        allResults.push({
-          id: item.id,
-          title: item.title,
-          type: "document",
-          date: item.created_at,
-          snippet: item.description || undefined,
-        });
+        const searchText = `${item.title} ${item.description || ""}`.toLowerCase();
+        const matches = searchWords.every(word => searchText.includes(word));
+        if (matches) {
+          allResults.push({
+            id: item.id,
+            title: item.title,
+            type: "document",
+            date: item.created_at,
+            snippet: item.description || undefined,
+          });
+        }
       });
 
+      // Filter archive
       archiveRes.data?.forEach((item) => {
-        allResults.push({
-          id: item.id,
-          title: `Выпуск №${item.issue_number} (${item.year})`,
-          type: "archive",
-          date: item.issue_date,
-        });
+        const searchText = `${item.issue_number} ${item.year}`.toLowerCase();
+        const matches = searchWords.every(word => searchText.includes(word));
+        if (matches) {
+          allResults.push({
+            id: item.id,
+            title: `Выпуск №${item.issue_number} (${item.year})`,
+            type: "archive",
+            date: item.issue_date,
+          });
+        }
       });
 
-      return allResults;
+      // Filter galleries
+      galleriesRes.data?.forEach((item) => {
+        const searchText = item.title.toLowerCase();
+        const matches = searchWords.every(word => searchText.includes(word));
+        if (matches) {
+          allResults.push({
+            id: item.id,
+            title: item.title,
+            type: "gallery",
+            slug: item.slug,
+            date: item.published_at || "",
+          });
+        }
+      });
+
+      // Sort by date
+      allResults.sort((a, b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+
+      return allResults.slice(0, 50);
     },
     enabled: query.trim().length > 0,
   });
@@ -132,6 +177,8 @@ const Search = () => {
         return <FileText className="h-4 w-4" />;
       case "archive":
         return <Archive className="h-4 w-4" />;
+      case "gallery":
+        return <Image className="h-4 w-4" />;
     }
   };
 
@@ -145,6 +192,8 @@ const Search = () => {
         return "Документ";
       case "archive":
         return "Архив";
+      case "gallery":
+        return "Галерея";
     }
   };
 
@@ -158,12 +207,15 @@ const Search = () => {
         return `/documents`;
       case "archive":
         return `/archive`;
+      case "gallery":
+        return `/galleries/${result.slug}`;
     }
   };
 
   const highlightText = (text: string, searchTerm: string) => {
     if (!searchTerm.trim()) return text;
-    const regex = new RegExp(`(${searchTerm})`, "gi");
+    const words = searchTerm.trim().split(/\s+/);
+    const regex = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, "gi");
     const parts = text.split(regex);
     return parts.map((part, i) =>
       regex.test(part) ? (
@@ -231,7 +283,7 @@ const Search = () => {
 
           {!isLoading && groupedResults && Object.keys(groupedResults).length > 0 && (
             <div className="space-y-8">
-              {(["news", "blog", "document", "archive"] as const).map((type) => {
+              {(["news", "blog", "gallery", "document", "archive"] as const).map((type) => {
                 const items = groupedResults[type];
                 if (!items?.length) return null;
 
@@ -243,6 +295,7 @@ const Search = () => {
                       {type === "blog" && "Блоги"}
                       {type === "document" && "Документы"}
                       {type === "archive" && "Архив газеты"}
+                      {type === "gallery" && "Галереи"}
                       <Badge variant="secondary" className="ml-2">
                         {items.length}
                       </Badge>
@@ -300,7 +353,7 @@ const Search = () => {
           {!query && (
             <div className="text-center py-12 text-muted-foreground">
               <SearchIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Введите запрос для поиска по новостям, блогам, документам и архиву</p>
+              <p>Введите запрос для поиска по новостям, блогам, галереям, документам и архиву</p>
             </div>
           )}
         </div>
