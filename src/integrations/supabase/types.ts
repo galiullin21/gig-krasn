@@ -81,9 +81,11 @@ export type Database = {
           end_date: string | null
           id: string
           image_url: string
+          impressions_count: number | null
           is_active: boolean | null
           link_url: string | null
           position: string
+          priority: number | null
           start_date: string | null
           title: string
         }
@@ -93,9 +95,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           image_url: string
+          impressions_count?: number | null
           is_active?: boolean | null
           link_url?: string | null
           position: string
+          priority?: number | null
           start_date?: string | null
           title: string
         }
@@ -105,13 +109,48 @@ export type Database = {
           end_date?: string | null
           id?: string
           image_url?: string
+          impressions_count?: number | null
           is_active?: boolean | null
           link_url?: string | null
           position?: string
+          priority?: number | null
           start_date?: string | null
           title?: string
         }
         Relationships: []
+      }
+      blog_tags: {
+        Row: {
+          blog_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          blog_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          blog_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_tags_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blogs: {
         Row: {
@@ -317,6 +356,36 @@ export type Database = {
           },
         ]
       }
+      email_subscriptions: {
+        Row: {
+          categories: Json | null
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          subscribed_at: string
+          unsubscribe_token: string
+        }
+        Insert: {
+          categories?: Json | null
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          subscribed_at?: string
+          unsubscribe_token?: string
+        }
+        Update: {
+          categories?: Json | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          subscribed_at?: string
+          unsubscribe_token?: string
+        }
+        Relationships: []
+      }
       galleries: {
         Row: {
           cover_image: string | null
@@ -350,6 +419,45 @@ export type Database = {
           title?: string
           type?: string
           views_count?: number | null
+        }
+        Relationships: []
+      }
+      media_library: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          height: number | null
+          id: string
+          uploaded_by: string | null
+          width: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          height?: number | null
+          id?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          height?: number | null
+          id?: string
+          uploaded_by?: string | null
+          width?: number | null
         }
         Relationships: []
       }
@@ -411,6 +519,75 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_documents: {
+        Row: {
+          document_id: string
+          id: string
+          news_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          document_id: string
+          id?: string
+          news_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          document_id?: string
+          id?: string
+          news_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "news_documents_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_tags: {
+        Row: {
+          id: string
+          news_id: string
+          tag_id: string
+        }
+        Insert: {
+          id?: string
+          news_id: string
+          tag_id: string
+        }
+        Update: {
+          id?: string
+          news_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_tags_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "news_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -562,6 +739,30 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json | null
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          type?: string
         }
         Relationships: []
       }
