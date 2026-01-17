@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     contentData = data as unknown as ContentData;
 
     // Build the post message
-    const siteUrl = "https://gig-krasn.lovable.app";
+    const siteUrl = "https://gig26.ru";
     const fullUrl = `${siteUrl}/${urlPath}/${contentData.slug}`;
     
     let description = "";
