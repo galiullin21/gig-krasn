@@ -27,9 +27,11 @@ interface Comment {
 interface CommentsSectionProps {
   contentType: "news" | "blog";
   contentId: string;
+  contentTitle?: string;
+  contentSlug?: string;
 }
 
-export function CommentsSection({ contentType, contentId }: CommentsSectionProps) {
+export function CommentsSection({ contentType, contentId, contentTitle, contentSlug }: CommentsSectionProps) {
   const { user } = useAuth();
 
   const { data: comments, isLoading } = useQuery({
@@ -100,7 +102,12 @@ export function CommentsSection({ contentType, contentId }: CommentsSectionProps
       {/* Comment form for authenticated users */}
       {user ? (
         <div className="mb-8">
-          <CommentForm contentType={contentType} contentId={contentId} />
+          <CommentForm 
+            contentType={contentType} 
+            contentId={contentId}
+            contentTitle={contentTitle}
+            contentSlug={contentSlug}
+          />
         </div>
       ) : (
         <div className="mb-8 p-4 bg-muted rounded-lg text-center">

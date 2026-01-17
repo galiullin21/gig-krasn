@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { notifyNewReaction } from "@/lib/adminNotifications";
 
 interface ReactionButtonsProps {
   contentType: "news" | "blog" | "comment";
   contentId: string;
+  contentTitle?: string;
+  contentSlug?: string;
   size?: "sm" | "default";
 }
 
@@ -22,6 +25,8 @@ interface ReactionCounts {
 export function ReactionButtons({
   contentType,
   contentId,
+  contentTitle,
+  contentSlug,
   size = "default",
 }: ReactionButtonsProps) {
   const { user } = useAuth();
@@ -56,6 +61,7 @@ export function ReactionButtons({
       if (!user) throw new Error("Необходима авторизация");
 
       const currentReaction = reactions?.userReaction;
+      let isNewReaction = false;
 
       if (currentReaction === reactionType) {
         // Remove reaction
@@ -75,6 +81,7 @@ export function ReactionButtons({
           .eq("content_id", contentId)
           .eq("user_id", user.id);
         if (error) throw error;
+        isNewReaction = true;
       } else {
         // Create new reaction
         const { error } = await supabase.from("reactions").insert({
@@ -84,6 +91,12 @@ export function ReactionButtons({
           reaction_type: reactionType,
         });
         if (error) throw error;
+        isNewReaction = true;
+      }
+
+      // Send admin notification only for new reactions on news/blog
+      if (isNewReaction && contentTitle && (contentType === "news" || contentType === "blog")) {
+        await notifyNewReaction(contentType, contentTitle, reactionType, contentSlug);
       }
     },
     onMutate: (reactionType) => {
