@@ -133,6 +133,50 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          is_approved: boolean | null
+          parent_id: string | null
+          text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          parent_id?: string | null
+          text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          parent_id?: string | null
+          text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category_id: string | null
@@ -380,6 +424,33 @@ export type Database = {
         }
         Relationships: []
       }
+      reactions: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
@@ -472,6 +543,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      warning_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_from_admin: boolean | null
+          message: string
+          sender_id: string
+          warning_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_from_admin?: boolean | null
+          message: string
+          sender_id: string
+          warning_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_from_admin?: boolean | null
+          message?: string
+          sender_id?: string
+          warning_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warning_messages_warning_id_fkey"
+            columns: ["warning_id"]
+            isOneToOne: false
+            referencedRelation: "user_warnings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

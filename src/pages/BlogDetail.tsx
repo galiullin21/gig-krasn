@@ -9,6 +9,8 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Eye, Calendar, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ReactionButtons } from "@/components/reactions/ReactionButtons";
+import { CommentsSection } from "@/components/comments/CommentsSection";
 
 export default function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -184,6 +186,15 @@ export default function BlogDetail() {
           className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-condensed prose-a:text-primary"
           dangerouslySetInnerHTML={{ __html: blog.content || "" }}
         />
+
+        {/* Reactions */}
+        <div className="flex items-center gap-4 mt-8 pt-6 border-t">
+          <span className="text-sm text-muted-foreground">Оцените материал:</span>
+          <ReactionButtons contentType="blog" contentId={blog.id} />
+        </div>
+
+        {/* Comments */}
+        <CommentsSection contentType="blog" contentId={blog.id} />
 
         {/* Similar blogs */}
         {similarBlogs && similarBlogs.length > 0 && (

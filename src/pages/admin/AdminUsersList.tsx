@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { RoleBadge } from "@/components/RoleBadge";
+import { UserWarningsDialog } from "@/components/admin/UserWarningsDialog";
 import { Search, Shield, ShieldCheck, User, Trash2, AlertTriangle, Code, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -52,6 +53,7 @@ interface UserWithRole {
 export default function AdminUsersList() {
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [warningsDialog, setWarningsDialog] = useState<{ userId: string; userName: string } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -298,12 +300,15 @@ export default function AdminUsersList() {
                   </TableCell>
                   <TableCell>
                     {user.warnings_count > 0 ? (
-                      <Link
-                        to={`/admin/warnings/new?user=${user.user_id}`}
+                      <button
+                        onClick={() => setWarningsDialog({
+                          userId: user.user_id,
+                          userName: user.full_name || "Пользователь",
+                        })}
                         className="text-destructive font-medium hover:underline"
                       >
                         {user.warnings_count}
-                      </Link>
+                      </button>
                     ) : (
                       <span className="text-muted-foreground">0</span>
                     )}
@@ -363,6 +368,15 @@ export default function AdminUsersList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {warningsDialog && (
+        <UserWarningsDialog
+          userId={warningsDialog.userId}
+          userName={warningsDialog.userName}
+          open={!!warningsDialog}
+          onOpenChange={(open) => !open && setWarningsDialog(null)}
+        />
+      )}
     </div>
   );
 }
