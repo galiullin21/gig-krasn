@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.import-archives]
 verify_jwt = false
+
+[functions.import-documents]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false

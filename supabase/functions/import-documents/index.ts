@@ -5,20 +5,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Parse date string dd.mm.yyyy to ISO
-function parseDateDDMMYYYY(dateStr: string): string {
-  const match = dateStr.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
-  if (match) {
-    return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
-  }
-  return dateStr;
+interface DocumentEntry {
+  title: string;
+  url: string;
+  file_type?: string;
 }
 
-interface ArchiveEntry {
-  issue_number: string;
-  year: number;
-  date: string;
-  url: string;
+// Get file type from URL
+function getFileType(url: string): string {
+  const ext = url.split('.').pop()?.toLowerCase() || '';
+  const typeMap: Record<string, string> = {
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'zip': 'application/zip',
+    'rar': 'application/x-rar-compressed',
+  };
+  return typeMap[ext] || 'application/octet-stream';
 }
 
 Deno.serve(async (req) => {
@@ -32,16 +37,16 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const archives = body.archives as ArchiveEntry[];
+    const documents = body.documents as DocumentEntry[];
     
-    if (!archives || !Array.isArray(archives)) {
+    if (!documents || !Array.isArray(documents)) {
       return new Response(
-        JSON.stringify({ success: false, error: 'archives array required' }),
+        JSON.stringify({ success: false, error: 'documents array required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Processing ${archives.length} archives...`);
+    console.log(`Processing ${documents.length} documents...`);
 
     const results = {
       inserted: 0,
@@ -49,14 +54,13 @@ Deno.serve(async (req) => {
       errors: [] as string[]
     };
 
-    for (const entry of archives) {
+    for (const entry of documents) {
       try {
-        // Check if exists
+        // Check if exists by URL
         const { data: existing } = await supabase
-          .from('newspaper_archive')
+          .from('documents')
           .select('id')
-          .eq('issue_number', entry.issue_number)
-          .eq('year', entry.year)
+          .eq('file_url', entry.url)
           .maybeSingle();
 
         if (existing) {
@@ -64,25 +68,23 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const issueDate = parseDateDDMMYYYY(entry.date);
-
         const { error } = await supabase
-          .from('newspaper_archive')
+          .from('documents')
           .insert({
-            issue_number: entry.issue_number,
-            issue_date: issueDate,
-            pdf_url: entry.url,
-            year: entry.year,
-            cover_image: null
+            title: entry.title,
+            file_url: entry.url,
+            file_type: entry.file_type || getFileType(entry.url),
+            description: null,
+            category_id: null
           });
 
         if (error) {
-          results.errors.push(`${entry.year}/${entry.issue_number}: ${error.message}`);
+          results.errors.push(`${entry.title.substring(0, 50)}: ${error.message}`);
         } else {
           results.inserted++;
         }
       } catch (e) {
-        results.errors.push(`${entry.year}/${entry.issue_number}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        results.errors.push(`${entry.title.substring(0, 50)}: ${e instanceof Error ? e.message : 'Unknown error'}`);
       }
     }
 
