@@ -1,3 +1,4 @@
+// Admin notifications utility functions
 import { supabase } from "@/integrations/supabase/client";
 
 interface NotificationData {
