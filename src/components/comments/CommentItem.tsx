@@ -137,21 +137,26 @@ export function CommentItem({
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="font-medium text-sm flex items-center gap-1">
               {comment.profile?.full_name || "Пользователь"}
+              {/* Verification checkmark - always visible */}
+              {userRoles && userRoles.length > 0 && (
+                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
+              )}
             </span>
             {roleInfo && (
-              <Badge className={cn(roleInfo.bgColor, "text-white text-[10px] px-1.5 py-0 h-4 gap-0.5")}>
-                <roleInfo.icon className="w-2.5 h-2.5" />
-                {roleInfo.label}
+              <Badge className={cn(roleInfo.bgColor, "text-white text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 h-4 gap-0.5 flex-shrink-0")}>
+                <roleInfo.icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                <span className="hidden xs:inline">{roleInfo.label}</span>
+                <span className="xs:hidden">{highestRole?.charAt(0).toUpperCase()}</span>
               </Badge>
             )}
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(comment.created_at), "d MMM yyyy, HH:mm", { locale: ru })}
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
+              {format(new Date(comment.created_at), "d MMM, HH:mm", { locale: ru })}
             </span>
             {comment.updated_at !== comment.created_at && (
-              <span className="text-xs text-muted-foreground">(изменён)</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">(изм.)</span>
             )}
           </div>
 
