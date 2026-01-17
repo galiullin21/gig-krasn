@@ -68,9 +68,9 @@ const menuCategories = {
 const mainMenu = [
   { name: "НОВОСТИ", href: "/news", hasSubmenu: true },
   { name: "СТАТЬИ", href: "/blogs", hasSubmenu: true },
-  { name: "СПЕЦПРОЕКТЫ", href: "/projects", hasSubmenu: false },
+  { name: "СПЕЦПРОЕКТЫ", href: "/special-projects", hasSubmenu: false },
   { name: "ФОТО", href: "/galleries", hasSubmenu: false },
-  { name: "ВИДЕО", href: "/video", hasSubmenu: false },
+  { name: "ВИДЕО", href: "/galleries?type=video", hasSubmenu: false },
   { name: "ДОКУМЕНТЫ", href: "/documents", hasSubmenu: false },
   { name: "СПРАВОЧНАЯ", href: "/directory", hasSubmenu: false },
   { name: "РЕКЛАМОДАТЕЛЯМ", href: "/advertising", hasSubmenu: false },
