@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Phone, Mail, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdBannerDisplay } from "@/components/ads/AdBannerDisplay";
 
 export default function Advertising() {
   return (
@@ -128,31 +129,8 @@ export default function Advertising() {
 
             {/* Sidebar */}
             <aside className="w-full lg:w-72 space-y-6">
-              <div className="border rounded-lg p-4 bg-muted/30">
-                <div className="text-center text-muted-foreground text-sm mb-2">Реклама</div>
-                <div className="bg-muted rounded-lg flex items-center justify-center min-h-[200px]">
-                  <p className="text-xs text-muted-foreground text-center px-4">
-                    Здесь может быть размещено ваше рекламное объявление
-                  </p>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>РЕКЛАМА</span>
-                  <span>16.02.2024</span>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 bg-muted/30">
-                <div className="text-center text-muted-foreground text-sm mb-2">Реклама</div>
-                <div className="bg-muted rounded-lg flex items-center justify-center min-h-[200px]">
-                  <p className="text-xs text-muted-foreground text-center px-4">
-                    Здесь может быть размещено ваше рекламное объявление
-                  </p>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>РЕКЛАМА</span>
-                  <span>16.02.2024</span>
-                </div>
-              </div>
+              <AdBannerDisplay position="advertising-sidebar" />
+              <AdBannerDisplay position="advertising-sidebar" />
             </aside>
           </div>
         </div>

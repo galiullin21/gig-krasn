@@ -217,9 +217,17 @@ const AdminAdsForm = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="header">Шапка</SelectItem>
+                            <SelectItem value="header">Шапка сайта</SelectItem>
                             <SelectItem value="content">Контент</SelectItem>
                             <SelectItem value="sidebar">Боковая панель</SelectItem>
+                            <SelectItem value="special-projects-top">Спецпроекты — верх</SelectItem>
+                            <SelectItem value="special-projects-grid">Спецпроекты — в сетке</SelectItem>
+                            <SelectItem value="special-projects-sidebar">Спецпроекты — сайдбар</SelectItem>
+                            <SelectItem value="advertising-sidebar">Реклама — сайдбар</SelectItem>
+                            <SelectItem value="where-to-buy-sidebar">Где купить — сайдбар</SelectItem>
+                            <SelectItem value="archive-sidebar">Архив — сайдбар</SelectItem>
+                            <SelectItem value="directory-sidebar">Справочная — сайдбар</SelectItem>
+                            <SelectItem value="emergency-sidebar">Экстренные службы — сайдбар</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -313,6 +321,14 @@ const AdminAdsForm = () => {
                         header: "1200×150 px",
                         content: "1200×200 px",
                         sidebar: "300×400 px",
+                        "special-projects-top": "1200×100 px",
+                        "special-projects-grid": "300×200 px",
+                        "special-projects-sidebar": "300×250 px",
+                        "advertising-sidebar": "300×250 px",
+                        "where-to-buy-sidebar": "300×250 px",
+                        "archive-sidebar": "300×250 px",
+                        "directory-sidebar": "300×250 px",
+                        "emergency-sidebar": "300×250 px",
                       };
                       return (
                         <FormItem>

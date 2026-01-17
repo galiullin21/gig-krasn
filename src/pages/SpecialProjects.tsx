@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { AdBannerDisplay } from "@/components/ads/AdBannerDisplay";
 
 const categories = [
   { id: "all", name: "Все" },
@@ -46,9 +47,7 @@ export default function SpecialProjects() {
       {/* Hero Banner */}
       <div className="bg-muted">
         <div className="container py-6">
-          <div className="bg-primary/10 rounded-lg flex items-center justify-center min-h-[100px] text-muted-foreground">
-            <span>Рекламный баннер</span>
-          </div>
+          <AdBannerDisplay position="special-projects-top" />
         </div>
       </div>
 
@@ -131,14 +130,10 @@ export default function SpecialProjects() {
                       
                       {/* Ad placeholder every 4th item */}
                       {(index + 1) % 4 === 0 && index < projects.length - 1 && (
-                        <div key={`ad-${index}`} className="border rounded-lg p-3 bg-muted/30 flex flex-col">
-                          <div className="text-center text-muted-foreground text-xs mb-2">Реклама</div>
-                          <div className="flex-1 bg-muted rounded flex items-center justify-center min-h-[100px]">
-                            <p className="text-xs text-muted-foreground text-center px-2">
-                              Здесь может быть размещено ваше рекламное объявление
-                            </p>
-                          </div>
-                        </div>
+                        <AdBannerDisplay 
+                          key={`ad-${index}`} 
+                          position="special-projects-grid" 
+                        />
                       )}
                     </>
                   ))}
@@ -152,31 +147,8 @@ export default function SpecialProjects() {
 
             {/* Sidebar */}
             <aside className="w-full lg:w-72 space-y-6">
-              <div className="border rounded-lg p-4 bg-muted/30">
-                <div className="text-center text-muted-foreground text-sm mb-2">Реклама</div>
-                <div className="bg-muted rounded-lg flex items-center justify-center min-h-[200px]">
-                  <p className="text-xs text-muted-foreground text-center px-4">
-                    Здесь может быть размещено ваше рекламное объявление
-                  </p>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>РЕКЛАМА</span>
-                  <span>16.02.2024</span>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 bg-muted/30">
-                <div className="text-center text-muted-foreground text-sm mb-2">Реклама</div>
-                <div className="bg-muted rounded-lg flex items-center justify-center min-h-[200px]">
-                  <p className="text-xs text-muted-foreground text-center px-4">
-                    Здесь может быть размещено ваше рекламное объявление
-                  </p>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>РЕКЛАМА</span>
-                  <span>16.02.2024</span>
-                </div>
-              </div>
+              <AdBannerDisplay position="special-projects-sidebar" />
+              <AdBannerDisplay position="special-projects-sidebar" />
             </aside>
           </div>
         </div>
