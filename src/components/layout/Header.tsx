@@ -15,6 +15,7 @@ import {
 import { BurgerMenu } from "./BurgerMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
+import { OnlineAdmins } from "./OnlineAdmins";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
@@ -291,7 +292,7 @@ export function Header() {
 
       {/* Navigation bar - White */}
       <nav className="bg-card border-b hidden md:block">
-        <div className="container">
+        <div className="container flex items-center justify-between">
           <ul className="flex items-center gap-1">
             {navigation.map((item) => (
               <li key={item.name}>
@@ -304,6 +305,7 @@ export function Header() {
               </li>
             ))}
           </ul>
+          <OnlineAdmins />
         </div>
       </nav>
     </header>

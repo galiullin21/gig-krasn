@@ -57,6 +57,16 @@ export function WarningChat({ warningId, isAdmin = false, onClose }: WarningChat
       });
 
       if (error) throw error;
+
+      // If user sends message, create admin notification
+      if (!isAdmin) {
+        await supabase.from("admin_notifications").insert({
+          type: "warning_dispute",
+          title: "Новое сообщение по предупреждению",
+          message: message.trim().substring(0, 100) + (message.length > 100 ? "..." : ""),
+          link: "/admin/warnings",
+        });
+      }
     },
     onSuccess: () => {
       setMessage("");

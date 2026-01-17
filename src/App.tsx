@@ -36,6 +36,9 @@ import AdminAdsList from "./pages/admin/AdminAdsList";
 import AdminAdsForm from "./pages/admin/AdminAdsForm";
 import AdminUsersList from "./pages/admin/AdminUsersList";
 import AdminWarningForm from "./pages/admin/AdminWarningForm";
+import AdminWarnings from "./pages/admin/AdminWarnings";
+import AdminActions from "./pages/admin/AdminActions";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
 import GalleryDetail from "./pages/GalleryDetail";
 
@@ -95,7 +98,10 @@ const App = () => (
                 <Route path="ads/new" element={<AdminAdsForm />} />
                 <Route path="ads/:id" element={<AdminAdsForm />} />
                 <Route path="users" element={<AdminUsersList />} />
+                <Route path="warnings" element={<AdminWarnings />} />
                 <Route path="warnings/new" element={<AdminWarningForm />} />
+                <Route path="actions" element={<AdminActions />} />
+                <Route path="notifications" element={<AdminNotifications />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               
