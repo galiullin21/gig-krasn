@@ -40,6 +40,7 @@ import AdminWarnings from "./pages/admin/AdminWarnings";
 import AdminActions from "./pages/admin/AdminActions";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminCrosspost from "./pages/admin/AdminCrosspost";
 import GalleryDetail from "./pages/GalleryDetail";
 
 const queryClient = new QueryClient({
@@ -97,6 +98,7 @@ const App = () => (
                 <Route path="ads" element={<AdminAdsList />} />
                 <Route path="ads/new" element={<AdminAdsForm />} />
                 <Route path="ads/:id" element={<AdminAdsForm />} />
+                <Route path="crosspost" element={<AdminCrosspost />} />
                 <Route path="users" element={<AdminUsersList />} />
                 <Route path="warnings" element={<AdminWarnings />} />
                 <Route path="warnings/new" element={<AdminWarningForm />} />
