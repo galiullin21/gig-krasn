@@ -43,7 +43,7 @@ export default function AdminArchiveList() {
         .order("issue_date", { ascending: false });
 
       if (search) {
-        query = query.eq("issue_number", parseInt(search) || 0);
+        query = query.ilike("issue_number", `%${search}%`);
       }
 
       const { data, error } = await query;
