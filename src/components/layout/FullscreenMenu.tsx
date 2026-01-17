@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
-import { X, Search, Bell, User, Crown, LogOut } from "lucide-react";
+import { X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 // Social icons
 const VKIcon = () => (
@@ -31,35 +35,54 @@ const ViberIcon = () => (
   </svg>
 );
 
-const menuCategories = [
-  "Общество",
-  "Полиция/МЧС/ГИБДД",
-  "Здоровье/медицина",
-  "ЖКХ/ремонт",
-  "Культура",
-  "Спорт",
-  "Мероприятия",
-  "Образование",
-  "СВО",
+const newsCategories = [
+  { name: "Общество", slug: "obshchestvo" },
+  { name: "Полиция/МЧС/ГИБДД", slug: "politsiya-mchs-gibdd" },
+  { name: "Здоровье/медицина", slug: "zdorove-meditsina" },
+  { name: "Образование", slug: "obrazovanie" },
+  { name: "ЖКХ/ремонт", slug: "zhkkh-remont" },
+  { name: "Культура", slug: "kultura" },
+  { name: "Спорт", slug: "sport" },
+  { name: "Мероприятия", slug: "meropriyatiya" },
+  { name: "СВО", slug: "svo" },
 ];
 
 const directoryItems = [
   { name: "Сайты города", href: "/directory/sites" },
+  { name: "Органы власти", href: "/directory/government" },
   { name: "Расписание автобусов", href: "/directory/buses" },
   { name: "Экстренные службы", href: "/directory/emergency" },
   { name: "Аварийные службы", href: "/directory/repair" },
-  { name: "Органы власти", href: "/directory/government" },
 ];
+
+const documentYears = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016];
 
 interface FullscreenMenuProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type ActiveSubmenu = "news" | "articles" | "specprojects" | "directory" | "documents" | null;
+
 export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, profile, isAdmin, isEditor, signOut } = useAuth();
+  const [activeSubmenu, setActiveSubmenu] = useState<ActiveSubmenu>(null);
   const navigate = useNavigate();
+
+  // Fetch latest newspaper
+  const { data: latestNewspaper } = useQuery({
+    queryKey: ["latest-newspaper"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("newspaper_archive")
+        .select("*")
+        .order("issue_date", { ascending: false })
+        .limit(1)
+        .single();
+      return data;
+    },
+    enabled: isOpen,
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,244 +93,345 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
     }
   };
 
+  const handleLinkClick = () => {
+    setActiveSubmenu(null);
+    onClose();
+  };
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-gig-dark text-white overflow-y-auto animate-fade-in">
-      {/* Close button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-4 right-4 text-white hover:bg-white/10 z-10"
-        onClick={onClose}
-      >
-        <X className="w-6 h-6" />
-      </Button>
+    <div className="fixed inset-0 z-[100] flex">
+      {/* Red left panel with main menu */}
+      <div className="w-full lg:w-[320px] bg-primary text-white flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/10"
+            onClick={onClose}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          <Link to="/" onClick={handleLinkClick} className="flex items-center">
+            <span className="text-2xl font-black tracking-tight">
+              <span className="text-white">°</span>ГиГ
+            </span>
+          </Link>
+          <div className="w-10" /> {/* Spacer */}
+        </div>
 
-      <div className="container py-8 min-h-screen">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          {/* Left Column - Main Navigation */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Primary Links */}
-            <nav className="space-y-3">
-              <Link
-                to="/galleries"
-                onClick={onClose}
-                className="block text-lg font-medium hover:text-primary transition-colors"
-              >
-                Фото
-              </Link>
-              <Link
-                to="/video"
-                onClick={onClose}
-                className="block text-lg font-medium hover:text-primary transition-colors"
-              >
-                Видео
-              </Link>
-              <Link
-                to="/documents"
-                onClick={onClose}
-                className="block text-lg font-medium hover:text-primary transition-colors"
-              >
-                Документы
-              </Link>
-              <Link
-                to="/advertising"
-                onClick={onClose}
-                className="block text-lg font-medium hover:text-primary transition-colors"
-              >
-                Рекламодателям
-              </Link>
-              <Link
-                to="/archive"
-                onClick={onClose}
-                className="block text-lg font-medium hover:text-primary transition-colors"
-              >
-                Свежий номер / Купить подписку
-              </Link>
-            </nav>
+        {/* Main navigation */}
+        <nav className="flex-1 p-6 space-y-1 overflow-y-auto">
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "news" ? null : "news")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "news" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
+          >
+            НОВОСТИ {activeSubmenu === "news" && "←"}
+          </button>
+          
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "articles" ? null : "articles")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "articles" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
+          >
+            СТАТЬИ
+          </button>
 
-            {/* Search */}
-            <div className="pt-4">
-              <form onSubmit={handleSearch} className="relative">
-                <Input
-                  type="search"
-                  placeholder="поиск..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-0 border-b border-white/30 rounded-none text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:border-white px-0"
-                />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-10 w-10 text-white/70 hover:text-white hover:bg-transparent"
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              </form>
-            </div>
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "specprojects" ? null : "specprojects")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "specprojects" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
+          >
+            СПЕЦПРОЕКТЫ
+          </button>
 
-            {/* Social Links */}
-            <div className="flex items-center gap-4 pt-4">
-              <a
-                href="https://vk.com/gig26"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/70 hover:text-white transition-colors"
-              >
-                <VKIcon />
-              </a>
-              <a
-                href="https://t.me/gig26"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/70 hover:text-white transition-colors"
-              >
-                <TelegramIcon />
-              </a>
-              <a
-                href="https://ok.ru/gig26"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/70 hover:text-white transition-colors"
-              >
-                <OKIcon />
-              </a>
-              <a
-                href="#"
-                className="text-white/70 hover:text-white transition-colors"
-              >
-                <ViberIcon />
-              </a>
-            </div>
+          <Link
+            to="/galleries"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          >
+            ФОТО
+          </Link>
 
-            {/* User Section */}
-            <div className="pt-4 border-t border-white/10">
-              {user ? (
-                <div className="space-y-3">
-                  <Link
-                    to="/cabinet"
-                    onClick={onClose}
-                    className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-                  >
-                    <User className="w-5 h-5" />
-                    Личный кабинет
-                  </Link>
-                  {isEditor && (
-                    <Link
-                      to="/admin"
-                      onClick={onClose}
-                      className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-                    >
-                      <Crown className="w-5 h-5" />
-                      {isAdmin ? "Админ-панель" : "Редактирование"}
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => {
-                      signOut();
-                      onClose();
-                    }}
-                    className="flex items-center gap-2 text-white/50 hover:text-white transition-colors"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Выйти
-                  </button>
+          <Link
+            to="/galleries?type=video"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          >
+            ВИДЕО
+          </Link>
+
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "documents" ? null : "documents")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "documents" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
+          >
+            ДОКУМЕНТЫ
+          </button>
+
+          <button
+            onClick={() => setActiveSubmenu(activeSubmenu === "directory" ? null : "directory")}
+            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
+              activeSubmenu === "directory" ? "text-white" : "text-white/80 hover:text-white"
+            }`}
+          >
+            СПРАВОЧНАЯ
+          </button>
+
+          <Link
+            to="/advertising"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          >
+            РЕКЛАМОДАТЕЛЯМ
+          </Link>
+
+          <Link
+            to="/archive"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
+          >
+            АРХИВ
+          </Link>
+        </nav>
+
+        {/* Bottom section - Latest newspaper */}
+        <div className="p-6 border-t border-white/10">
+          <h4 className="text-sm font-medium mb-3 text-white/80">СВЕЖИЙ НОМЕР/КУПИТЬ ПОДПИСКУ</h4>
+          {latestNewspaper && (
+            <Link 
+              to="/archive" 
+              onClick={handleLinkClick}
+              className="flex items-start gap-3 group"
+            >
+              {latestNewspaper.cover_image ? (
+                <div className="w-20 h-28 rounded overflow-hidden flex-shrink-0 bg-white/10">
+                  <OptimizedImage
+                    src={latestNewspaper.cover_image}
+                    alt="Свежий номер"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               ) : (
-                <Link
-                  to="/auth"
-                  onClick={onClose}
-                  className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-                >
-                  <User className="w-5 h-5" />
-                  Войти
-                </Link>
+                <div className="w-20 h-28 rounded bg-white/10 flex-shrink-0" />
               )}
+              <div className="text-sm text-white/70 group-hover:text-white transition-colors">
+                <p>Город и горожане №{latestNewspaper.issue_number}</p>
+                <p>({format(new Date(latestNewspaper.issue_date), "d.MM.yyyy", { locale: ru })})</p>
+              </div>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* White right panel - expanded content */}
+      <div className="hidden lg:flex flex-1 bg-background overflow-y-auto">
+        <div className="p-8 w-full">
+          {/* Search */}
+          <form onSubmit={handleSearch} className="relative max-w-md mb-8">
+            <Input
+              type="search"
+              placeholder="поиск..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border-0 border-b border-border rounded-none px-0 focus-visible:ring-0"
+            />
+            <Button
+              type="submit"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-10 w-10"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
+          </form>
+
+          {/* Categories grid */}
+          <div className="grid grid-cols-3 gap-12">
+            {/* News categories */}
+            <div>
+              <h3 className="font-bold text-lg mb-4 border-b pb-2">НОВОСТИ</h3>
+              <nav className="space-y-2">
+                {newsCategories.map((cat) => (
+                  <Link
+                    key={cat.slug}
+                    to={`/news?category=${cat.slug}`}
+                    onClick={handleLinkClick}
+                    className="block text-sm text-muted-foreground hover:text-foreground transition-colors uppercase"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Articles categories */}
+            <div>
+              <h3 className="font-bold text-lg mb-4 border-b pb-2">СТАТЬИ</h3>
+              <nav className="space-y-2">
+                {newsCategories.map((cat) => (
+                  <Link
+                    key={cat.slug}
+                    to={`/blogs?category=${cat.slug}`}
+                    onClick={handleLinkClick}
+                    className="block text-sm text-muted-foreground hover:text-foreground transition-colors uppercase"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Documents */}
+            <div>
+              <h3 className="font-bold text-lg mb-4 border-b pb-2">ДОКУМЕНТЫ</h3>
+              <nav className="space-y-2">
+                {documentYears.map((year) => (
+                  <Link
+                    key={year}
+                    to={`/documents?year=${year}`}
+                    onClick={handleLinkClick}
+                    className="block text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {year}
+                  </Link>
+                ))}
+              </nav>
             </div>
           </div>
 
-          {/* News Categories */}
-          <div className="lg:col-span-2">
-            <h3 className="text-primary font-bold text-lg mb-4">Новости</h3>
-            <nav className="space-y-2">
-              {menuCategories.map((cat) => (
-                <Link
-                  key={cat}
-                  to={`/news?category=${encodeURIComponent(cat.toLowerCase())}`}
-                  onClick={onClose}
-                  className="block text-white/70 hover:text-white transition-colors"
-                >
-                  {cat}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* Articles Categories */}
-          <div className="lg:col-span-2">
-            <h3 className="text-primary font-bold text-lg mb-4">Статьи</h3>
-            <nav className="space-y-2">
-              {menuCategories.map((cat) => (
-                <Link
-                  key={cat}
-                  to={`/blogs?category=${encodeURIComponent(cat.toLowerCase())}`}
-                  onClick={onClose}
-                  className="block text-white/70 hover:text-white transition-colors"
-                >
-                  {cat}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* Special Projects */}
-          <div className="lg:col-span-2">
-            <h3 className="text-primary font-bold text-lg mb-4">Спецпроекты</h3>
-            <nav className="space-y-2">
-              <Link
-                to="/projects/1"
-                onClick={onClose}
-                className="block text-white/70 hover:text-white transition-colors"
-              >
-                Проект 1
-              </Link>
-              <Link
-                to="/projects/2"
-                onClick={onClose}
-                className="block text-white/70 hover:text-white transition-colors"
-              >
-                Проект 2
-              </Link>
-              <Link
-                to="/projects/3"
-                onClick={onClose}
-                className="block text-white/70 hover:text-white transition-colors"
-              >
-                Проект 3
-              </Link>
-            </nav>
-          </div>
-
-          {/* Directory */}
-          <div className="lg:col-span-3">
-            <h3 className="text-primary font-bold text-lg mb-4">Справочная</h3>
-            <nav className="space-y-2">
-              {directoryItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={onClose}
-                  className="block text-white/70 hover:text-white transition-colors"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
+          {/* Social links */}
+          <div className="flex items-center gap-4 mt-12 pt-6 border-t">
+            <a
+              href="https://vk.com/gig26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <VKIcon />
+            </a>
+            <a
+              href="https://t.me/gig26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <TelegramIcon />
+            </a>
+            <a
+              href="https://ok.ru/gig26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <OKIcon />
+            </a>
+            <a
+              href="#"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ViberIcon />
+            </a>
           </div>
         </div>
       </div>
+
+      {/* Mobile submenu overlay */}
+      {activeSubmenu && (
+        <div className="lg:hidden absolute inset-0 bg-background text-foreground overflow-y-auto">
+          <div className="p-4 border-b flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setActiveSubmenu(null)}
+            >
+              <X className="w-6 h-6" />
+            </Button>
+            <span className="font-bold">
+              {activeSubmenu === "news" && "Новости"}
+              {activeSubmenu === "articles" && "Статьи"}
+              {activeSubmenu === "specprojects" && "Спецпроекты"}
+              {activeSubmenu === "directory" && "Справочная"}
+              {activeSubmenu === "documents" && "Документы"}
+            </span>
+          </div>
+          <nav className="p-6 space-y-3">
+            {activeSubmenu === "news" && newsCategories.map((cat) => (
+              <Link
+                key={cat.slug}
+                to={`/news?category=${cat.slug}`}
+                onClick={handleLinkClick}
+                className="block py-2 border-b border-border/50"
+              >
+                {cat.name}
+              </Link>
+            ))}
+            {activeSubmenu === "articles" && newsCategories.map((cat) => (
+              <Link
+                key={cat.slug}
+                to={`/blogs?category=${cat.slug}`}
+                onClick={handleLinkClick}
+                className="block py-2 border-b border-border/50"
+              >
+                {cat.name}
+              </Link>
+            ))}
+            {activeSubmenu === "specprojects" && (
+              <>
+                <Link to="/projects/1" onClick={handleLinkClick} className="block py-2 border-b border-border/50">Проект 1</Link>
+                <Link to="/projects/2" onClick={handleLinkClick} className="block py-2 border-b border-border/50">Проект 2</Link>
+                <Link to="/projects/3" onClick={handleLinkClick} className="block py-2 border-b border-border/50">Проект 3</Link>
+              </>
+            )}
+            {activeSubmenu === "directory" && directoryItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={handleLinkClick}
+                className="block py-2 border-b border-border/50"
+              >
+                {item.name}
+              </Link>
+            ))}
+            {activeSubmenu === "documents" && documentYears.map((year) => (
+              <Link
+                key={year}
+                to={`/documents?year=${year}`}
+                onClick={handleLinkClick}
+                className="block py-2 border-b border-border/50"
+              >
+                {year}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
     </div>
   );
 }
