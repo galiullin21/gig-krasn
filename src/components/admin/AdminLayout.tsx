@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Bell,
   Activity,
+  Share2,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -31,6 +32,7 @@ const sidebarItems = [
   { name: "Галереи", href: "/admin/galleries", icon: Image },
   { name: "Архив газеты", href: "/admin/archive", icon: Archive },
   { name: "Реклама", href: "/admin/ads", icon: Megaphone },
+  { name: "Кросс-постинг", href: "/admin/crosspost", icon: Share2 },
 ];
 
 const adminOnlyItems = [
