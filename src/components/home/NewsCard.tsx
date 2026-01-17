@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 interface NewsCardProps {
   id: string;
@@ -26,10 +27,11 @@ export function NewsCard({
         <Link to={`/news/${slug}`} className="shrink-0">
           <div className="w-32 h-24 md:w-40 md:h-28 overflow-hidden rounded bg-muted">
             {coverImage ? (
-              <img
+              <OptimizedImage
                 src={coverImage}
                 alt={title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                sizes="160px"
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
@@ -71,10 +73,11 @@ export function NewsCard({
       <Link to={`/news/${slug}`} className="block">
         <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted mb-3">
           {coverImage ? (
-            <img
+            <OptimizedImage
               src={coverImage}
               alt={title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />

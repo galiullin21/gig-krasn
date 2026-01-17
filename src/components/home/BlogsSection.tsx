@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export function BlogsSection() {
   const { data: blogs, isLoading } = useQuery({
@@ -62,10 +63,11 @@ export function BlogsSection() {
             <Link to={`/blogs/${blog.slug}`} className="block">
               <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted mb-2">
                 {blog.cover_image ? (
-                  <img
+                  <OptimizedImage
                     src={blog.cover_image}
                     alt={blog.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 640px) 50vw, 25vw"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">

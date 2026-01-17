@@ -3,6 +3,7 @@ import { ChevronRight, Camera } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export function GalleriesSection() {
   const { data: galleries, isLoading } = useQuery({
@@ -64,10 +65,11 @@ export function GalleriesSection() {
               <Link to={`/galleries/${gallery.slug}`} className="block">
                 <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted">
                   {gallery.cover_image ? (
-                    <img
+                    <OptimizedImage
                       src={gallery.cover_image}
                       alt={gallery.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">

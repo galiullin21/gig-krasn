@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Image, Eye, Images } from "lucide-react";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -114,10 +115,11 @@ export default function Galleries() {
               >
                 <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted mb-3 relative">
                   {gallery.cover_image ? (
-                    <img
+                    <OptimizedImage
                       src={gallery.cover_image}
                       alt={gallery.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
