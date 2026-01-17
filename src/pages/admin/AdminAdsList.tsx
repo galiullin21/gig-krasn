@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, ExternalLink, MousePointer } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ExternalLink, MousePointer, Eye, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -69,16 +69,20 @@ const AdminAdsList = () => {
   });
 
   const getPositionLabel = (position: string) => {
-    switch (position) {
-      case "header":
-        return "Шапка";
-      case "content":
-        return "Контент";
-      case "sidebar":
-        return "Боковая панель";
-      default:
-        return position;
-    }
+    const labels: Record<string, string> = {
+      header: "Шапка сайта",
+      content: "Контент",
+      sidebar: "Боковая панель",
+      "special-projects-top": "Спецпроекты — верх",
+      "special-projects-grid": "Спецпроекты — в сетке",
+      "special-projects-sidebar": "Спецпроекты — сайдбар",
+      "advertising-sidebar": "Реклама — сайдбар",
+      "where-to-buy-sidebar": "Где купить — сайдбар",
+      "archive-sidebar": "Архив — сайдбар",
+      "directory-sidebar": "Справочная — сайдбар",
+      "emergency-sidebar": "Экстренные службы — сайдбар",
+    };
+    return labels[position] || position;
   };
 
   return (
@@ -114,7 +118,9 @@ const AdminAdsList = () => {
               <TableHead>Название</TableHead>
               <TableHead>Позиция</TableHead>
               <TableHead>Статус</TableHead>
+              <TableHead>Показы</TableHead>
               <TableHead>Клики</TableHead>
+              <TableHead>CTR</TableHead>
               <TableHead>Период</TableHead>
               <TableHead className="w-[100px]">Действия</TableHead>
             </TableRow>
@@ -129,6 +135,8 @@ const AdminAdsList = () => {
                     <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-20" /></TableCell>
                   </TableRow>
@@ -138,7 +146,7 @@ const AdminAdsList = () => {
 
             {!isLoading && ads?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Рекламных баннеров пока нет
                 </TableCell>
               </TableRow>
@@ -187,8 +195,22 @@ const AdminAdsList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 text-muted-foreground">
+                      <Eye className="h-3 w-3" />
+                      {ad.impressions_count || 0}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 text-muted-foreground">
                       <MousePointer className="h-3 w-3" />
                       {ad.clicks_count || 0}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <TrendingUp className="h-3 w-3" />
+                      {ad.impressions_count && ad.impressions_count > 0 
+                        ? ((ad.clicks_count || 0) / ad.impressions_count * 100).toFixed(2) + "%"
+                        : "0%"}
                     </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
