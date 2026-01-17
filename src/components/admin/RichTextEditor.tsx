@@ -5,6 +5,7 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
+import Youtube from "@tiptap/extension-youtube";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +29,7 @@ import {
   Redo,
   Code,
   Minus,
+  Video,
 } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import {
@@ -47,6 +49,7 @@ interface RichTextEditorProps {
 export function RichTextEditor({ value, onChange, placeholder = "Начните писать..." }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -66,6 +69,13 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
         HTMLAttributes: {
           class: "max-w-full rounded-lg my-4",
         },
+      }),
+      Youtube.configure({
+        HTMLAttributes: {
+          class: "w-full aspect-video rounded-lg my-4",
+        },
+        width: 640,
+        height: 360,
       }),
       Placeholder.configure({
         placeholder,
@@ -106,6 +116,13 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
       setImageUrl("");
     }
   }, [editor, imageUrl]);
+
+  const addVideo = useCallback(() => {
+    if (videoUrl) {
+      editor?.chain().focus().setYoutubeVideo({ src: videoUrl }).run();
+      setVideoUrl("");
+    }
+  }, [editor, videoUrl]);
 
   if (!editor) {
     return null;
@@ -314,6 +331,30 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
                 onKeyDown={(e) => e.key === "Enter" && addImage()}
               />
               <Button size="sm" onClick={addImage}>
+                Вставить
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Video */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+              <Video className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Вставить видео</p>
+              <p className="text-xs text-muted-foreground">YouTube, Vimeo</p>
+              <Input
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addVideo()}
+              />
+              <Button size="sm" onClick={addVideo}>
                 Вставить
               </Button>
             </div>

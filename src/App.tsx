@@ -41,6 +41,9 @@ import AdminActions from "./pages/admin/AdminActions";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminCrosspost from "./pages/admin/AdminCrosspost";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminMedia from "./pages/admin/AdminMedia";
 import GalleryDetail from "./pages/GalleryDetail";
 
 const queryClient = new QueryClient({
@@ -104,6 +107,9 @@ const App = () => (
                 <Route path="warnings/new" element={<AdminWarningForm />} />
                 <Route path="actions" element={<AdminActions />} />
                 <Route path="notifications" element={<AdminNotifications />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="newsletter" element={<AdminNewsletter />} />
+                <Route path="media" element={<AdminMedia />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
               

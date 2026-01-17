@@ -10,6 +10,16 @@ import { Eye, Calendar, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactionButtons } from "@/components/reactions/ReactionButtons";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { ShareButtons } from "@/components/share/ShareButtons";
+import { SEO } from "@/components/seo/SEO";
+import { TagList } from "@/components/tags/TagBadge";
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+}
 
 export default function NewsDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -36,8 +46,29 @@ export default function NewsDetail() {
           .maybeSingle();
         authorProfile = profile;
       }
+
+      // Fetch tags
+      let tags: Tag[] = [];
+      if (data?.id) {
+        const { data: tagData } = await supabase
+          .from("news_tags")
+          .select("tag_id, tags(id, name, slug, type)")
+          .eq("news_id", data.id);
+        tags = (tagData || []).map((t: any) => t.tags).filter(Boolean);
+      }
+
+      // Fetch attached documents
+      let documents: any[] = [];
+      if (data?.id) {
+        const { data: docData } = await supabase
+          .from("news_documents")
+          .select("document_id, documents(id, title, file_url, file_type, file_size)")
+          .eq("news_id", data.id)
+          .order("sort_order");
+        documents = (docData || []).map((d: any) => d.documents).filter(Boolean);
+      }
       
-      return data ? { ...data, author_profile: authorProfile } : null;
+      return data ? { ...data, author_profile: authorProfile, tags, documents } : null;
     },
     enabled: !!slug,
   });
@@ -97,8 +128,25 @@ export default function NewsDetail() {
     );
   }
 
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <Layout>
+      <SEO
+        title={news.title}
+        description={news.lead || undefined}
+        image={news.cover_image || undefined}
+        url={`/news/${news.slug}`}
+        type="article"
+        publishedTime={news.published_at || undefined}
+        author={news.author_profile?.full_name || undefined}
+      />
+      
       <article className="container py-6 md:py-8 max-w-4xl">
         {/* Back button */}
         <Link
@@ -130,6 +178,11 @@ export default function NewsDetail() {
           </p>
         )}
 
+        {/* Tags */}
+        {news.tags && news.tags.length > 0 && (
+          <TagList tags={news.tags} className="mb-4" />
+        )}
+
         {/* Meta info */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 pb-6 border-b">
           {news.published_at && (
@@ -157,6 +210,7 @@ export default function NewsDetail() {
               src={news.cover_image}
               alt={news.title}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
         )}
@@ -167,8 +221,44 @@ export default function NewsDetail() {
           dangerouslySetInnerHTML={{ __html: news.content || "" }}
         />
 
+        {/* Attached Documents */}
+        {news.documents && news.documents.length > 0 && (
+          <div className="mt-8 p-4 bg-muted/50 rounded-lg">
+            <h3 className="font-medium mb-3">Прикреплённые документы</h3>
+            <ul className="space-y-2">
+              {news.documents.map((doc: any) => (
+                <li key={doc.id}>
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <span>{doc.title}</span>
+                    {doc.file_size && (
+                      <span className="text-xs text-muted-foreground">
+                        ({formatFileSize(doc.file_size)})
+                      </span>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Share buttons */}
+        <div className="mt-8 pt-6 border-t">
+          <ShareButtons
+            url={`/news/${news.slug}`}
+            title={news.title}
+            description={news.lead || ""}
+            image={news.cover_image || undefined}
+          />
+        </div>
+
         {/* Reactions */}
-        <div className="flex items-center gap-4 mt-8 pt-6 border-t">
+        <div className="flex items-center gap-4 mt-6 pt-6 border-t">
           <span className="text-sm text-muted-foreground">Оцените материал:</span>
           <ReactionButtons contentType="news" contentId={news.id} />
         </div>
@@ -189,6 +279,7 @@ export default function NewsDetail() {
                         src={item.cover_image}
                         alt={item.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />

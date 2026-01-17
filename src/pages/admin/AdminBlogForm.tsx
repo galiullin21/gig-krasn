@@ -30,6 +30,7 @@ import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
 
 const blogSchema = z.object({
@@ -52,6 +53,7 @@ export default function AdminBlogForm() {
   const queryClient = useQueryClient();
   const { crosspost } = useCrosspost();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const form = useForm<BlogFormData>({
     resolver: zodResolver(blogSchema),
@@ -90,6 +92,20 @@ export default function AdminBlogForm() {
     enabled: isEditing,
   });
 
+  // Fetch existing tags for the blog
+  const { data: existingTags } = useQuery({
+    queryKey: ["blog-tags", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_tags")
+        .select("tag_id")
+        .eq("blog_id", id);
+      if (error) throw error;
+      return data?.map((t) => t.tag_id) || [];
+    },
+    enabled: isEditing,
+  });
+
   useEffect(() => {
     if (blogItem) {
       form.reset({
@@ -102,6 +118,12 @@ export default function AdminBlogForm() {
       });
     }
   }, [blogItem, form]);
+
+  useEffect(() => {
+    if (existingTags) {
+      setSelectedTagIds(existingTags);
+    }
+  }, [existingTags]);
 
   const generateSlug = (title: string) => {
     return title
@@ -136,6 +158,15 @@ export default function AdminBlogForm() {
           .update(payload)
           .eq("id", id);
         if (error) throw error;
+
+        // Update tags
+        await supabase.from("blog_tags").delete().eq("blog_id", id);
+        if (selectedTagIds.length > 0) {
+          await supabase.from("blog_tags").insert(
+            selectedTagIds.map((tagId) => ({ blog_id: id, tag_id: tagId }))
+          );
+        }
+
         toast({ title: "Блог обновлён" });
       } else {
         const { data: insertData, error } = await supabase
@@ -145,6 +176,14 @@ export default function AdminBlogForm() {
           .single();
         if (error) throw error;
         contentId = insertData.id;
+
+        // Insert tags
+        if (selectedTagIds.length > 0) {
+          await supabase.from("blog_tags").insert(
+            selectedTagIds.map((tagId) => ({ blog_id: contentId, tag_id: tagId }))
+          );
+        }
+
         toast({ title: "Блог создан" });
       }
 
@@ -308,6 +347,15 @@ export default function AdminBlogForm() {
                       </FormItem>
                     )}
                   />
+
+                  <div className="space-y-2">
+                    <FormLabel>Теги</FormLabel>
+                    <TagSelector
+                      type="blog"
+                      selectedTagIds={selectedTagIds}
+                      onChange={setSelectedTagIds}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

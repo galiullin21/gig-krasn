@@ -33,6 +33,7 @@ import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
 
 const newsSchema = z.object({
@@ -58,6 +59,7 @@ export default function AdminNewsForm() {
   const queryClient = useQueryClient();
   const { crosspost } = useCrosspost();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const form = useForm<NewsFormData>({
     resolver: zodResolver(newsSchema),
@@ -99,6 +101,20 @@ export default function AdminNewsForm() {
     enabled: isEditing,
   });
 
+  // Fetch existing tags for the news item
+  const { data: existingTags } = useQuery({
+    queryKey: ["news-tags", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("news_tags")
+        .select("tag_id")
+        .eq("news_id", id);
+      if (error) throw error;
+      return data?.map((t) => t.tag_id) || [];
+    },
+    enabled: isEditing,
+  });
+
   useEffect(() => {
     if (newsItem) {
       form.reset({
@@ -114,6 +130,12 @@ export default function AdminNewsForm() {
       });
     }
   }, [newsItem, form]);
+
+  useEffect(() => {
+    if (existingTags) {
+      setSelectedTagIds(existingTags);
+    }
+  }, [existingTags]);
 
   const generateSlug = (title: string) => {
     return title
@@ -151,6 +173,15 @@ export default function AdminNewsForm() {
           .update(payload)
           .eq("id", id);
         if (error) throw error;
+
+        // Update tags
+        await supabase.from("news_tags").delete().eq("news_id", id);
+        if (selectedTagIds.length > 0) {
+          await supabase.from("news_tags").insert(
+            selectedTagIds.map((tagId) => ({ news_id: id, tag_id: tagId }))
+          );
+        }
+
         toast({ title: "Новость обновлена" });
       } else {
         const { data: insertData, error } = await supabase
@@ -160,6 +191,14 @@ export default function AdminNewsForm() {
           .single();
         if (error) throw error;
         contentId = insertData.id;
+
+        // Insert tags
+        if (selectedTagIds.length > 0) {
+          await supabase.from("news_tags").insert(
+            selectedTagIds.map((tagId) => ({ news_id: contentId, tag_id: tagId }))
+          );
+        }
+
         toast({ title: "Новость создана" });
       }
 
@@ -342,6 +381,15 @@ export default function AdminNewsForm() {
                       </FormItem>
                     )}
                   />
+
+                  <div className="space-y-2">
+                    <FormLabel>Теги</FormLabel>
+                    <TagSelector
+                      type="news"
+                      selectedTagIds={selectedTagIds}
+                      onChange={setSelectedTagIds}
+                    />
+                  </div>
 
                   <div className="flex flex-col gap-4 pt-2">
                     <FormField
