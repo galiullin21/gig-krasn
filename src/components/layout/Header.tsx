@@ -73,6 +73,7 @@ const mainMenu = [
   { name: "ВИДЕО", href: "/galleries?type=video", hasSubmenu: false },
   { name: "ДОКУМЕНТЫ", href: "/documents", hasSubmenu: false },
   { name: "СПРАВОЧНАЯ", href: "/directory", hasSubmenu: false },
+  { name: "ЭКСТРЕННЫЕ СЛУЖБЫ", href: "/emergency", hasSubmenu: false },
   { name: "РЕКЛАМОДАТЕЛЯМ", href: "/advertising", hasSubmenu: false },
   { name: "АРХИВ", href: "/archive", hasSubmenu: false },
 ];
