@@ -48,11 +48,10 @@ const newsCategories = [
 ];
 
 const directoryItems = [
-  { name: "Сайты города", href: "/directory/sites" },
-  { name: "Органы власти", href: "/directory/government" },
-  { name: "Расписание автобусов", href: "/directory/buses" },
-  { name: "Экстренные службы", href: "/directory/emergency" },
-  { name: "Аварийные службы", href: "/directory/repair" },
+  { name: "Сайты города", href: "/directory" },
+  { name: "Экстренные службы", href: "/emergency" },
+  { name: "Аварийные службы", href: "/emergency#emergency-services" },
+  { name: "Где купить газету", href: "/where-to-buy" },
 ];
 
 const documentYears = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016];
@@ -161,14 +160,13 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
             СТАТЬИ
           </button>
 
-          <button
-            onClick={() => setActiveSubmenu(activeSubmenu === "specprojects" ? null : "specprojects")}
-            className={`block w-full text-left text-lg font-medium py-2 transition-colors ${
-              activeSubmenu === "specprojects" ? "text-white" : "text-white/80 hover:text-white"
-            }`}
+          <Link
+            to="/special-projects"
+            onClick={handleLinkClick}
+            className="block text-lg font-medium py-2 text-white/80 hover:text-white transition-colors"
           >
             СПЕЦПРОЕКТЫ
-          </button>
+          </Link>
 
           <Link
             to="/galleries"
@@ -403,11 +401,13 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
               </Link>
             ))}
             {activeSubmenu === "specprojects" && (
-              <>
-                <Link to="/projects/1" onClick={handleLinkClick} className="block py-2 border-b border-border/50">Проект 1</Link>
-                <Link to="/projects/2" onClick={handleLinkClick} className="block py-2 border-b border-border/50">Проект 2</Link>
-                <Link to="/projects/3" onClick={handleLinkClick} className="block py-2 border-b border-border/50">Проект 3</Link>
-              </>
+              <Link
+                to="/special-projects"
+                onClick={handleLinkClick}
+                className="block py-2 border-b border-border/50"
+              >
+                Все спецпроекты
+              </Link>
             )}
             {activeSubmenu === "directory" && directoryItems.map((item) => (
               <Link
