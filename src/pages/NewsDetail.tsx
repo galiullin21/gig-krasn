@@ -287,6 +287,7 @@ export default function NewsDetail() {
             contentId={news.id}
             contentTitle={news.title}
             contentSlug={news.slug}
+            contentOwnerId={news.author_id || undefined}
           />
         </div>
 

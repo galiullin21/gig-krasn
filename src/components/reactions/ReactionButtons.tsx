@@ -7,12 +7,14 @@ import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { notifyNewReaction } from "@/lib/adminNotifications";
+import { notifyContentReaction } from "@/lib/userNotifications";
 
 interface ReactionButtonsProps {
   contentType: "news" | "blog" | "comment";
   contentId: string;
   contentTitle?: string;
   contentSlug?: string;
+  contentOwnerId?: string; // To notify content owner
   size?: "sm" | "default";
 }
 
@@ -27,6 +29,7 @@ export function ReactionButtons({
   contentId,
   contentTitle,
   contentSlug,
+  contentOwnerId,
   size = "default",
 }: ReactionButtonsProps) {
   const { user } = useAuth();
@@ -37,7 +40,6 @@ export function ReactionButtons({
   const { data: reactions, isLoading } = useQuery({
     queryKey: ["reactions", contentType, contentId],
     queryFn: async (): Promise<ReactionCounts> => {
-      // Get all reactions for this content
       const { data: allReactions, error } = await supabase
         .from("reactions")
         .select("reaction_type, user_id")
@@ -94,9 +96,17 @@ export function ReactionButtons({
         isNewReaction = true;
       }
 
-      // Send admin notification only for new reactions on news/blog
-      if (isNewReaction && contentTitle && (contentType === "news" || contentType === "blog")) {
-        await notifyNewReaction(contentType, contentTitle, reactionType, contentSlug);
+      // Send notifications for new reactions
+      if (isNewReaction) {
+        // Admin notification for news/blog
+        if (contentTitle && (contentType === "news" || contentType === "blog")) {
+          await notifyNewReaction(contentType, contentTitle, reactionType, contentSlug);
+        }
+
+        // User notification
+        if (contentOwnerId && contentTitle) {
+          await notifyContentReaction(contentOwnerId, reactionType, contentType, contentTitle, contentSlug);
+        }
       }
     },
     onMutate: (reactionType) => {
