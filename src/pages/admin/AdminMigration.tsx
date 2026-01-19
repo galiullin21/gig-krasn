@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, FileJson, Archive, FileText, Play, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Upload, FileJson, Archive, FileText, Play, CheckCircle, XCircle, AlertCircle, HardDrive, RefreshCw } from "lucide-react";
 
 interface ArchiveEntry {
   title: string;
@@ -85,6 +85,24 @@ export default function AdminMigration() {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<ImportLog[]>([]);
   const [stats, setStats] = useState({ added: 0, skipped: 0, errors: 0 });
+
+  // PDF Migration state
+  const [pdfMigrating, setPdfMigrating] = useState(false);
+  const [pdfStats, setPdfStats] = useState<{
+    processed: number;
+    success: number;
+    errors: number;
+    remaining: number;
+    results: Array<{
+      id: string;
+      issue_number: string;
+      year: number;
+      status: string;
+      oldUrl?: string;
+      newUrl?: string;
+      error?: string;
+    }>;
+  } | null>(null);
 
   const addLog = (type: ImportLog["type"], message: string) => {
     setLogs(prev => [...prev, { type, message, timestamp: new Date() }]);
@@ -293,8 +311,12 @@ export default function AdminMigration() {
         </p>
       </div>
 
-      <Tabs defaultValue="archives" className="space-y-4">
+      <Tabs defaultValue="pdf-migration" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="pdf-migration" className="gap-2">
+            <HardDrive className="h-4 w-4" />
+            Миграция PDF
+          </TabsTrigger>
           <TabsTrigger value="archives" className="gap-2">
             <Archive className="h-4 w-4" />
             Архивы газеты
@@ -304,6 +326,145 @@ export default function AdminMigration() {
             Документы
           </TabsTrigger>
         </TabsList>
+
+        {/* PDF Migration */}
+        <TabsContent value="pdf-migration" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HardDrive className="h-5 w-5" />
+                Миграция PDF файлов со старого сайта
+              </CardTitle>
+              <CardDescription>
+                Скачивает PDF файлы с gig26.ru и загружает их на новый сервер.
+                {pdfStats && (
+                  <span className="block mt-2 font-medium text-foreground">
+                    Осталось мигрировать: {pdfStats.remaining} файлов
+                  </span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={async () => {
+                    setPdfMigrating(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("migrate-archives", {
+                        body: { limit: 5, offset: 0 }
+                      });
+                      
+                      if (error) throw error;
+                      setPdfStats(data);
+                      
+                      toast({
+                        title: "Миграция завершена",
+                        description: `Обработано: ${data.processed}, Успешно: ${data.success}, Ошибок: ${data.errors}`,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Ошибка миграции",
+                        description: (error as Error).message,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setPdfMigrating(false);
+                    }
+                  }}
+                  disabled={pdfMigrating}
+                  className="gap-2"
+                >
+                  {pdfMigrating ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  Мигрировать 5 файлов
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    setPdfMigrating(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("migrate-archives", {
+                        body: { limit: 20, offset: 0 }
+                      });
+                      
+                      if (error) throw error;
+                      setPdfStats(data);
+                      
+                      toast({
+                        title: "Миграция завершена",
+                        description: `Обработано: ${data.processed}, Успешно: ${data.success}, Ошибок: ${data.errors}`,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Ошибка миграции",
+                        description: (error as Error).message,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setPdfMigrating(false);
+                    }
+                  }}
+                  disabled={pdfMigrating}
+                  className="gap-2"
+                >
+                  {pdfMigrating ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  Мигрировать 20 файлов
+                </Button>
+              </div>
+
+              {pdfStats && (
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Badge variant="default" className="bg-green-500">{pdfStats.success} успешно</Badge>
+                    <Badge variant="destructive">{pdfStats.errors} ошибок</Badge>
+                    <Badge variant="secondary">{pdfStats.remaining} осталось</Badge>
+                  </div>
+                  
+                  <ScrollArea className="h-[300px] border rounded-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Год</TableHead>
+                          <TableHead>№</TableHead>
+                          <TableHead>Статус</TableHead>
+                          <TableHead>Новый URL</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pdfStats.results.map((result) => (
+                          <TableRow key={result.id}>
+                            <TableCell>{result.year}</TableCell>
+                            <TableCell>{result.issue_number}</TableCell>
+                            <TableCell>
+                              {result.status === "success" ? (
+                                <Badge className="bg-green-500">Успешно</Badge>
+                              ) : result.status === "error" ? (
+                                <Badge variant="destructive">{result.error}</Badge>
+                              ) : (
+                                <Badge variant="secondary">Пропущен</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                              {result.newUrl || result.error || "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Архивы газеты */}
         <TabsContent value="archives" className="space-y-4">
