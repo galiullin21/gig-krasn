@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { generateSlug } from "@/lib/transliterate";
 import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
 
@@ -126,13 +127,6 @@ export default function AdminBlogForm() {
     }
   }, [existingTags]);
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-а-яё]/gi, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
 
   const onSubmit = async (data: BlogFormData) => {
     setIsSubmitting(true);
