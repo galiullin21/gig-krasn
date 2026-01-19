@@ -33,6 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Loader2, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { generateSlug } from "@/lib/transliterate";
 
 interface Category {
   id: string;
@@ -147,13 +148,6 @@ export default function AdminCategories() {
     },
   });
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^\w\s-а-яё]/gi, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
 
   const openDialog = (item?: Category | TagItem, type?: "news" | "blog" | "document") => {
     if (item) {

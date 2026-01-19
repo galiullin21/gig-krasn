@@ -41,6 +41,7 @@ import { ImageUpload } from "@/components/admin/ImageUpload";
 import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
 import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
+import { generateSlug } from "@/lib/transliterate";
 
 const RichTextEditor = lazy(() => import("@/components/admin/RichTextEditor").then(m => ({ default: m.RichTextEditor })));
 
@@ -191,13 +192,6 @@ export default function AdminNewsForm() {
     }
   }, [existingDocuments]);
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-а-яё]/gi, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
 
   const toggleDocument = (docId: string) => {
     setSelectedDocumentIds((prev) =>

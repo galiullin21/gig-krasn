@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Loader2, Save, Plus, X, Video, Play, ExternalLink } from "lucide-react";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { useCrosspost } from "@/hooks/useCrosspost";
+import { generateSlug } from "@/lib/transliterate";
 
 const videoSchema = z.object({
   title: z.string().min(1, "Введите название").max(255),
@@ -129,22 +130,6 @@ export default function AdminVideoForm() {
     }
   }, [videoData, form]);
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[а-яё]/g, (char) => {
-        const map: Record<string, string> = {
-          а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo",
-          ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m",
-          н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u",
-          ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ъ: "",
-          ы: "y", ь: "", э: "e", ю: "yu", я: "ya",
-        };
-        return map[char] || char;
-      })
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  };
 
   const addVideo = () => {
     if (!newVideoUrl.trim()) {

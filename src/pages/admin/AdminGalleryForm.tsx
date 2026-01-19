@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Upload, X, Image, Video, Link2, Play, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCrosspost } from "@/hooks/useCrosspost";
+import { generateSlug } from "@/lib/transliterate";
 
 const gallerySchema = z.object({
   title: z.string().min(1, "Введите название").max(255),
@@ -162,13 +163,6 @@ export default function AdminGalleryForm() {
     }
   }, [galleryItem, form]);
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-а-яё]/gi, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
