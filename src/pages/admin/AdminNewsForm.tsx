@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
@@ -30,7 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, Eye, FileText, X } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Eye, FileText, X, CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
@@ -50,6 +55,7 @@ const newsSchema = z.object({
   status: z.enum(["draft", "published", "archived"]),
   is_featured: z.boolean(),
   is_important: z.boolean(),
+  published_at: z.date().optional().nullable(),
 });
 
 type NewsFormData = z.infer<typeof newsSchema>;
@@ -85,6 +91,7 @@ export default function AdminNewsForm() {
       status: "draft",
       is_featured: false,
       is_important: false,
+      published_at: null,
     },
   });
 
@@ -167,6 +174,7 @@ export default function AdminNewsForm() {
         status: newsItem.status,
         is_featured: newsItem.is_featured || false,
         is_important: newsItem.is_important || false,
+        published_at: newsItem.published_at ? new Date(newsItem.published_at) : null,
       });
     }
   }, [newsItem, form]);
@@ -205,6 +213,16 @@ export default function AdminNewsForm() {
       const wasPublished = newsItem?.status === "published";
       const isPublishing = data.status === "published" && !wasPublished;
 
+      // Determine published_at date
+      let publishedAt: string | null = null;
+      if (data.status === "published") {
+        if (data.published_at) {
+          publishedAt = data.published_at.toISOString();
+        } else {
+          publishedAt = new Date().toISOString();
+        }
+      }
+
       const payload = {
         title: data.title,
         slug: data.slug,
@@ -217,7 +235,7 @@ export default function AdminNewsForm() {
         lead: data.lead || null,
         content: data.content || null,
         author_id: user?.id,
-        published_at: data.status === "published" ? new Date().toISOString() : null,
+        published_at: publishedAt,
       };
 
       let contentId = id;
@@ -496,6 +514,49 @@ export default function AdminNewsForm() {
                             <SelectItem value="published">Опубликовано</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="published_at"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Дата публикации</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "d MMMM yyyy, HH:mm", { locale: ru })
+                                ) : (
+                                  <span>Выберите дату</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormDescription>
+                          Если не указать — будет текущая дата при публикации
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
