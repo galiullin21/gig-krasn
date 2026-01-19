@@ -26,6 +26,7 @@ import {
   Activity,
   Share2,
   Mail,
+  Video,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -34,6 +35,7 @@ const sidebarItems = [
   { name: "Блоги", href: "/admin/blogs", icon: BookOpen },
   { name: "Документы", href: "/admin/documents", icon: FileText },
   { name: "Галереи", href: "/admin/galleries", icon: Image },
+  { name: "Видео", href: "/admin/videos", icon: Video },
   { name: "Архив газеты", href: "/admin/archive", icon: Archive },
   { name: "Реклама", href: "/admin/ads", icon: Megaphone },
   { name: "Кросс-постинг", href: "/admin/crosspost", icon: Share2 },
