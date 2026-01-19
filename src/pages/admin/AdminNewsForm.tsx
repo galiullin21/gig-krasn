@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Eye, FileText, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
 import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
 
@@ -44,6 +45,7 @@ const newsSchema = z.object({
   lead: z.string().max(500).optional(),
   content: z.string().optional(),
   cover_image: z.string().optional(),
+  gallery_images: z.array(z.string()).optional(),
   category_id: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]),
   is_featured: z.boolean(),
@@ -78,6 +80,7 @@ export default function AdminNewsForm() {
       lead: "",
       content: "",
       cover_image: "",
+      gallery_images: [],
       category_id: "",
       status: "draft",
       is_featured: false,
@@ -159,6 +162,7 @@ export default function AdminNewsForm() {
         lead: newsItem.lead || "",
         content: newsItem.content || "",
         cover_image: newsItem.cover_image || "",
+        gallery_images: (newsItem as any).gallery_images || [],
         category_id: newsItem.category_id || "",
         status: newsItem.status,
         is_featured: newsItem.is_featured || false,
@@ -209,6 +213,7 @@ export default function AdminNewsForm() {
         is_important: data.is_important,
         category_id: data.category_id || null,
         cover_image: data.cover_image || null,
+        gallery_images: data.gallery_images || [],
         lead: data.lead || null,
         content: data.content || null,
         author_id: user?.id,
@@ -576,6 +581,32 @@ export default function AdminNewsForm() {
                             onChange={field.onChange}
                             bucket="covers"
                             folder="news"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Галерея изображений</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="gallery_images"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <MultiImageUpload
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            bucket="images"
+                            folder="news-gallery"
+                            maxImages={20}
                           />
                         </FormControl>
                         <FormMessage />
