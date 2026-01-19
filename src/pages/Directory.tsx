@@ -77,18 +77,11 @@ export default function Directory() {
               {/* Navigation to other sections */}
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link 
-                  to="/directory/emergency"
+                  to="/emergency"
                   className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   <Building2 className="h-5 w-5" />
-                  Аварийные службы
-                </Link>
-                <Link 
-                  to="/directory/urgent"
-                  className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  <ExternalLink className="h-5 w-5" />
-                  Экстренные службы
+                  Аварийные и экстренные службы
                 </Link>
               </div>
             </div>
