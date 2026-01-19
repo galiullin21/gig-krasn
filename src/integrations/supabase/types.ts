@@ -471,6 +471,7 @@ export type Database = {
           content: string | null
           cover_image: string | null
           created_at: string
+          gallery_images: string[] | null
           id: string
           is_featured: boolean | null
           is_important: boolean | null
@@ -488,6 +489,7 @@ export type Database = {
           content?: string | null
           cover_image?: string | null
           created_at?: string
+          gallery_images?: string[] | null
           id?: string
           is_featured?: boolean | null
           is_important?: boolean | null
@@ -505,6 +507,7 @@ export type Database = {
           content?: string | null
           cover_image?: string | null
           created_at?: string
+          gallery_images?: string[] | null
           id?: string
           is_featured?: boolean | null
           is_important?: boolean | null
