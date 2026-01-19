@@ -3,10 +3,12 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Image, Images } from "lucide-react";
+import { Image, Video, Play } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const ITEMS_PER_PAGE = 16;
@@ -25,8 +27,10 @@ export default function Galleries() {
         .not("published_at", "is", null)
         .order("published_at", { ascending: false });
 
-      if (selectedType !== "all") {
-        query = query.eq("type", selectedType);
+      if (selectedType === "photo") {
+        query = query.in("type", ["photo", "photogallery", "gallery"]);
+      } else if (selectedType === "video") {
+        query = query.in("type", ["video", "reportage"]);
       }
 
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -40,6 +44,10 @@ export default function Galleries() {
   });
 
   const totalPages = Math.ceil((galleriesData?.total || 0) / ITEMS_PER_PAGE);
+
+  const handleTypeChange = (type: string) => {
+    setSearchParams({ type, page: "1" });
+  };
 
   const handlePageChange = (page: number) => {
     setSearchParams({ type: selectedType, page: page.toString() });
@@ -55,6 +63,23 @@ export default function Galleries() {
     return 0;
   };
 
+  const getVideoCount = (videos: unknown) => {
+    if (Array.isArray(videos)) return videos.length;
+    return 0;
+  };
+
+  const isVideoType = (type: string | null) => {
+    return type === "video" || type === "reportage";
+  };
+
+  const getPageTitle = () => {
+    switch (selectedType) {
+      case "photo": return "Фотогалереи";
+      case "video": return "Видео";
+      default: return "Галереи и видео";
+    }
+  };
+
   return (
     <Layout>
       {/* Hero Banner */}
@@ -68,10 +93,26 @@ export default function Galleries() {
 
       <div className="container py-6 md:py-8">
         {/* Page Header */}
-        <div className="mb-6 border-b-4 border-primary pb-2 inline-block">
-          <h1 className="text-2xl md:text-3xl font-condensed font-bold text-foreground">
-            Фотогалереи
-          </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="border-b-4 border-primary pb-2 inline-block">
+            <h1 className="text-2xl md:text-3xl font-condensed font-bold text-foreground">
+              {getPageTitle()}
+            </h1>
+          </div>
+          
+          <Tabs value={selectedType} onValueChange={handleTypeChange}>
+            <TabsList>
+              <TabsTrigger value="all">Все</TabsTrigger>
+              <TabsTrigger value="photo">
+                <Image className="w-4 h-4 mr-1.5" />
+                Фото
+              </TabsTrigger>
+              <TabsTrigger value="video">
+                <Video className="w-4 h-4 mr-1.5" />
+                Видео
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {isLoading ? (
@@ -87,6 +128,7 @@ export default function Galleries() {
         ) : galleriesData?.galleries && galleriesData.galleries.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {galleriesData.galleries.map((gallery, index) => {
+              const isVideo = isVideoType(gallery.type);
               // Every 4th item in each row is an ad placeholder
               const isAd = (index + 1) % 4 === 0;
               
@@ -123,9 +165,33 @@ export default function Galleries() {
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                        <Image className="w-12 h-12 text-primary/40" />
+                        {isVideo ? (
+                          <Video className="w-12 h-12 text-primary/40" />
+                        ) : (
+                          <Image className="w-12 h-12 text-primary/40" />
+                        )}
                       </div>
                     )}
+                    
+                    {/* Video play icon overlay */}
+                    {isVideo && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                          <Play className="w-5 h-5 text-foreground ml-0.5" fill="currentColor" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Type badge */}
+                    <div className="absolute top-2 left-2">
+                      <Badge variant={isVideo ? "default" : "secondary"} className="text-xs">
+                        {isVideo ? (
+                          <><Video className="w-3 h-3 mr-1" />{getVideoCount(gallery.videos)}</>
+                        ) : (
+                          <><Image className="w-3 h-3 mr-1" />{getImageCount(gallery.images)}</>
+                        )}
+                      </Badge>
+                    </div>
                   </div>
                   <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors mt-2">
                     {gallery.title}
@@ -143,8 +209,14 @@ export default function Galleries() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Image className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground text-lg">Галерей пока нет</p>
+            {selectedType === "video" ? (
+              <Video className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            ) : (
+              <Image className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            )}
+            <p className="text-muted-foreground text-lg">
+              {selectedType === "video" ? "Видео пока нет" : selectedType === "photo" ? "Галерей пока нет" : "Контента пока нет"}
+            </p>
           </div>
         )}
 
@@ -157,7 +229,7 @@ export default function Galleries() {
               onClick={handleLoadMore}
               className="px-12 rounded-full"
             >
-              Больше галерей
+              Загрузить ещё
             </Button>
           </div>
         )}
