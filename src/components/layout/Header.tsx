@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, User, Menu, Crown, LogOut } from "lucide-react";
+import { Search, User, Menu, Crown, LogOut, Sun, Cloud, CloudRain, Snowflake, CloudSun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +14,59 @@ import {
 import { NotificationBell } from "./NotificationBell";
 import { FullscreenMenu } from "./FullscreenMenu";
 import { useAuth } from "@/hooks/useAuth";
+
+// Weather Widget Component
+function WeatherWidget() {
+  const [weather, setWeather] = useState<{ temp: number; description: string } | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // Железногорск, Красноярский край coordinates: 56.25, 93.53
+        const response = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=56.25&longitude=93.53&current=temperature_2m,weather_code&timezone=Asia/Krasnoyarsk`
+        );
+        const data = await response.json();
+        if (data.current) {
+          const temp = Math.round(data.current.temperature_2m);
+          const code = data.current.weather_code;
+          let description = "Ясно";
+          if (code >= 71) description = "Снег";
+          else if (code >= 61) description = "Дождь";
+          else if (code >= 51) description = "Морось";
+          else if (code >= 45) description = "Туман";
+          else if (code >= 3) description = "Облачно";
+          else if (code >= 1) description = "Переменная облачность";
+          setWeather({ temp, description });
+        }
+      } catch (error) {
+        console.error("Failed to fetch weather:", error);
+      }
+    };
+
+    fetchWeather();
+    // Refresh every 30 minutes
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getWeatherIcon = () => {
+    if (!weather) return <Sun className="w-5 h-5" />;
+    const desc = weather.description.toLowerCase();
+    if (desc.includes("снег")) return <Snowflake className="w-5 h-5" />;
+    if (desc.includes("дождь") || desc.includes("морось")) return <CloudRain className="w-5 h-5" />;
+    if (desc.includes("облачно")) return <Cloud className="w-5 h-5" />;
+    if (desc.includes("переменная")) return <CloudSun className="w-5 h-5" />;
+    return <Sun className="w-5 h-5" />;
+  };
+
+  return (
+    <div className="hidden md:flex items-center gap-2 text-sm">
+      {getWeatherIcon()}
+      <span>{weather ? `${weather.temp > 0 ? '+' : ''}${weather.temp}°C` : "..."}</span>
+    </div>
+  );
+}
 
 // Social icons
 const VKIcon = () => (
@@ -108,8 +161,7 @@ export function Header() {
           </Button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-1">
-            <span className="text-primary-foreground/60 text-xl">°</span>
+          <Link to="/" className="flex items-center">
             <span className="text-2xl md:text-3xl font-bold font-condensed tracking-tight">
               ГиГ
             </span>
@@ -121,16 +173,7 @@ export function Header() {
           </div>
 
           {/* Weather Widget - Desktop */}
-          <div className="hidden md:flex items-center gap-3 text-sm">
-            <span className="opacity-80">24 мкр/ч</span>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-            </svg>
-            <span>-18</span>
-            <svg className="w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-            </svg>
-          </div>
+          <WeatherWidget />
 
           {/* Social Icons - Desktop */}
           <div className="hidden md:flex items-center gap-2">
