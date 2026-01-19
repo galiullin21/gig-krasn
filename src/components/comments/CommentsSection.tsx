@@ -52,7 +52,7 @@ export function CommentsSection({ contentType, contentId, contentTitle, contentS
 
       if (userIds.length > 0) {
         const { data: profilesData } = await supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("user_id, full_name, avatar_url")
           .in("user_id", userIds);
 

@@ -44,7 +44,7 @@ export default function BlogDetail() {
       let authorProfile = null;
       if (data?.author_id) {
         const { data: profile } = await supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("full_name, avatar_url")
           .eq("user_id", data.author_id)
           .maybeSingle();
@@ -105,7 +105,7 @@ export default function BlogDetail() {
           let authorProfile = null;
           if (item.author_id) {
             const { data: profile } = await supabase
-              .from("profiles")
+              .from("public_profiles")
               .select("full_name")
               .eq("user_id", item.author_id)
               .maybeSingle();
