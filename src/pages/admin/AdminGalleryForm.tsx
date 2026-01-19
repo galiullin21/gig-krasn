@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -166,8 +167,10 @@ export default function AdminGalleryForm() {
         ? (galleryItem.images as string[])
         : [];
       
-      const galleryVideos = Array.isArray(galleryItem.videos)
-        ? (galleryItem.videos as VideoItem[])
+      // videos column added via migration - use type assertion
+      const galleryData = galleryItem as typeof galleryItem & { videos?: unknown };
+      const galleryVideos = Array.isArray(galleryData.videos)
+        ? (galleryData.videos as unknown as VideoItem[])
         : [];
       
       form.reset({
@@ -314,8 +317,8 @@ export default function AdminGalleryForm() {
         slug: data.slug,
         type: data.type,
         cover_image: data.cover_image || null,
-        images: images,
-        videos: videos,
+        images: images as unknown as Json,
+        videos: videos as unknown as Json,
         published_at: data.published ? new Date().toISOString() : null,
       };
 

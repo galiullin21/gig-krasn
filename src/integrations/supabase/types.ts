@@ -396,6 +396,7 @@ export type Database = {
           slug: string
           title: string
           type: string
+          videos: Json | null
           views_count: number | null
         }
         Insert: {
@@ -407,6 +408,7 @@ export type Database = {
           slug: string
           title: string
           type?: string
+          videos?: Json | null
           views_count?: number | null
         }
         Update: {
@@ -418,6 +420,7 @@ export type Database = {
           slug?: string
           title?: string
           type?: string
+          videos?: Json | null
           views_count?: number | null
         }
         Relationships: []
