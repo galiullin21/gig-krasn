@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Eye, Calendar, User, ArrowLeft } from "lucide-react";
+import { Eye, Calendar, User, ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactionButtons } from "@/components/reactions/ReactionButtons";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { ShareButtons } from "@/components/share/ShareButtons";
 import { SEO } from "@/components/seo/SEO";
 import { TagList } from "@/components/tags/TagBadge";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Tag {
   id: string;
@@ -26,6 +27,8 @@ interface Tag {
 export default function NewsDetail() {
   const { slug } = useParams<{ slug: string }>();
   const viewTracked = useRef(false);
+  const { isEditor, isAdmin } = useAuth();
+  const canEdit = isEditor || isAdmin;
 
   const { data: news, isLoading } = useQuery({
     queryKey: ["news", slug],
@@ -170,14 +173,24 @@ export default function NewsDetail() {
       />
       
       <article className="container py-6 md:py-8 max-w-4xl">
-        {/* Back button */}
-        <Link
-          to="/news"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Все новости
-        </Link>
+        {/* Back button and Edit button */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/news"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Все новости
+          </Link>
+          {canEdit && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/admin/news/${news.id}`}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Редактировать
+              </Link>
+            </Button>
+          )}
+        </div>
 
         {/* Category */}
         {news.categories?.name && (

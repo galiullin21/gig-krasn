@@ -9,13 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Eye, Calendar, ArrowLeft } from "lucide-react";
+import { Eye, Calendar, ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReactionButtons } from "@/components/reactions/ReactionButtons";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { ShareButtons } from "@/components/share/ShareButtons";
 import { SEO } from "@/components/seo/SEO";
 import { TagList } from "@/components/tags/TagBadge";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Tag {
   id: string;
@@ -27,6 +28,8 @@ interface Tag {
 export default function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
   const viewTracked = useRef(false);
+  const { isEditor, isAdmin } = useAuth();
+  const canEdit = isEditor || isAdmin;
 
   const { data: blog, isLoading } = useQuery({
     queryKey: ["blog", slug],
@@ -181,14 +184,24 @@ export default function BlogDetail() {
       />
 
       <article className="container py-6 md:py-8 max-w-4xl">
-        {/* Back button */}
-        <Link
-          to="/blogs"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Все блоги
-        </Link>
+        {/* Back button and Edit button */}
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/blogs"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Все блоги
+          </Link>
+          {canEdit && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/admin/blogs/${blog.id}`}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Редактировать
+              </Link>
+            </Button>
+          )}
+        </div>
 
         {/* Category */}
         {blog.categories?.name && (
