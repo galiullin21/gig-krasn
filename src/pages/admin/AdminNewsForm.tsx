@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -33,9 +33,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Eye, FileText, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
-import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
+
+const RichTextEditor = lazy(() => import("@/components/admin/RichTextEditor").then(m => ({ default: m.RichTextEditor })));
 
 const newsSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
@@ -380,11 +381,13 @@ export default function AdminNewsForm() {
                       <FormItem>
                         <FormLabel>Содержание</FormLabel>
                         <FormControl>
-                          <RichTextEditor
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            placeholder="Начните писать новость..."
-                          />
+                          <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                            <RichTextEditor
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              placeholder="Начните писать новость..."
+                            />
+                          </Suspense>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
