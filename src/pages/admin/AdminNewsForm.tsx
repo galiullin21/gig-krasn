@@ -488,6 +488,36 @@ export default function AdminNewsForm() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Gallery Section - moved here for visibility */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Галерея изображений (карусель)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="gallery_images"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormDescription className="mb-4">
+                          Загрузите несколько изображений для отображения в виде карусели на странице новости
+                        </FormDescription>
+                        <FormControl>
+                          <MultiImageUpload
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            bucket="images"
+                            folder="news-gallery"
+                            maxImages={20}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar */}
@@ -651,31 +681,6 @@ export default function AdminNewsForm() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Галерея изображений</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField
-                    control={form.control}
-                    name="gallery_images"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <MultiImageUpload
-                            value={field.value || []}
-                            onChange={field.onChange}
-                            bucket="images"
-                            folder="news-gallery"
-                            maxImages={20}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
 
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1" disabled={isSubmitting}>
