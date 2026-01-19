@@ -552,44 +552,94 @@ export default function AdminNewsForm() {
                   <FormField
                     control={form.control}
                     name="published_at"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Дата публикации</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "d MMMM yyyy, HH:mm", { locale: ru })
-                                ) : (
-                                  <span>Выберите дату</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={field.onChange}
-                              initialFocus
-                              className={cn("p-3 pointer-events-auto")}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormDescription>
-                          Если не указать — будет текущая дата при публикации
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const handleDateSelect = (date: Date | undefined) => {
+                        if (date) {
+                          // Preserve existing time if there was a previous value
+                          if (field.value) {
+                            date.setHours(field.value.getHours());
+                            date.setMinutes(field.value.getMinutes());
+                          }
+                          field.onChange(date);
+                        } else {
+                          field.onChange(null);
+                        }
+                      };
+
+                      const handleTimeChange = (type: 'hours' | 'minutes', value: string) => {
+                        const numValue = parseInt(value, 10);
+                        if (isNaN(numValue)) return;
+                        
+                        const date = field.value ? new Date(field.value) : new Date();
+                        if (type === 'hours') {
+                          date.setHours(Math.max(0, Math.min(23, numValue)));
+                        } else {
+                          date.setMinutes(Math.max(0, Math.min(59, numValue)));
+                        }
+                        field.onChange(date);
+                      };
+
+                      return (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Дата и время публикации</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "d MMMM yyyy, HH:mm", { locale: ru })
+                                  ) : (
+                                    <span>Выберите дату и время</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={handleDateSelect}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                              <div className="border-t p-3 flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Время:</span>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={23}
+                                  value={field.value ? format(field.value, "HH") : "12"}
+                                  onChange={(e) => handleTimeChange('hours', e.target.value)}
+                                  className="w-16 text-center"
+                                  placeholder="ЧЧ"
+                                />
+                                <span>:</span>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={59}
+                                  value={field.value ? format(field.value, "mm") : "00"}
+                                  onChange={(e) => handleTimeChange('minutes', e.target.value)}
+                                  className="w-16 text-center"
+                                  placeholder="ММ"
+                                />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <FormDescription>
+                            Если не указать — будет текущая дата при публикации
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
