@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface OptimizedImageProps {
@@ -12,7 +12,7 @@ interface OptimizedImageProps {
   fallback?: string;
 }
 
-export function OptimizedImage({
+export const OptimizedImage = forwardRef<HTMLDivElement, OptimizedImageProps>(({
   src,
   alt,
   className,
@@ -21,7 +21,7 @@ export function OptimizedImage({
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
   priority = false,
   fallback = "/placeholder.svg",
-}: OptimizedImageProps) {
+}, ref) => {
   const [error, setError] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -47,7 +47,7 @@ export function OptimizedImage({
   const imageSrc = error ? fallback : src;
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div ref={ref} className={cn("relative overflow-hidden", className)}>
       {!loaded && !error && (
         <div className="absolute inset-0 bg-muted animate-pulse" />
       )}
@@ -70,4 +70,6 @@ export function OptimizedImage({
       />
     </div>
   );
-}
+});
+
+OptimizedImage.displayName = "OptimizedImage";
