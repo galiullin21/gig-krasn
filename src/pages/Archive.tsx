@@ -143,12 +143,6 @@ export default function Archive() {
                     </div>
                   ))}
 
-                  {/* All issues button */}
-                  <div className="text-center pt-4">
-                    <Button variant="default" className="rounded-full px-8">
-                      Все выпуски
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 /* Empty state with subscription block */

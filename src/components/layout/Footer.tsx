@@ -32,14 +32,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Logo & Contacts */}
           <div className="space-y-4">
-            <Link to="/" className="inline-flex items-center gap-1">
-              <span className="text-white/60 text-xl">°</span>
+            <Link to="/" className="inline-flex items-center">
               <span className="text-3xl font-bold font-condensed">ГиГ</span>
             </Link>
             
             <div className="flex gap-2 mt-4">
               <a
-                href="https://vk.com/gig26"
+                href="https://vk.com/gorod_i_gorozhane"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
@@ -55,22 +54,6 @@ export function Footer() {
                 aria-label="Odnoklassniki"
               >
                 <OKIcon />
-              </a>
-              <a
-                href="https://t.me/gig26"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-                aria-label="Telegram"
-              >
-                <TelegramIcon />
-              </a>
-              <a
-                href="#"
-                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-                aria-label="Viber"
-              >
-                <ViberIcon />
               </a>
             </div>
             
