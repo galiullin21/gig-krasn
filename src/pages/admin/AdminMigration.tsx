@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, FileJson, Archive, FileText, Play, CheckCircle, XCircle, AlertCircle, HardDrive, RefreshCw } from "lucide-react";
+import { Upload, FileJson, Archive, FileText, Play, CheckCircle, XCircle, AlertCircle, HardDrive, RefreshCw, Globe, Newspaper } from "lucide-react";
 
 interface ArchiveEntry {
   title: string;
@@ -115,6 +115,22 @@ export default function AdminMigration() {
     newUrl?: string;
     error?: string;
   }>>([]);
+
+  // Web scraping state
+  const [scrapingPhase, setScrapingPhase] = useState<'idle' | 'discovering' | 'scraping' | 'importing'>('idle');
+  const [discoveredUrls, setDiscoveredUrls] = useState<string[]>([]);
+  const [scrapedArticles, setScrapedArticles] = useState<Array<{
+    title: string;
+    content: string;
+    lead?: string;
+    cover_image?: string;
+    published_at: string;
+    url: string;
+    type: 'news' | 'blog';
+  }>>([]);
+  const [scrapeProgress, setScrapeProgress] = useState(0);
+  const [scrapeStats, setScrapeStats] = useState({ total: 0, scraped: 0, skipped: 0, errors: 0 });
+  const stopScrapingRef = useRef(false);
 
   // Ref to control stopping auto migration
   const stopMigrationRef = useRef(false);
@@ -383,8 +399,12 @@ export default function AdminMigration() {
         </p>
       </div>
 
-      <Tabs defaultValue="pdf-migration" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="web-scrape" className="space-y-4">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="web-scrape" className="gap-2">
+            <Globe className="h-4 w-4" />
+            Новости и блоги
+          </TabsTrigger>
           <TabsTrigger value="pdf-migration" className="gap-2">
             <HardDrive className="h-4 w-4" />
             Миграция PDF
@@ -398,6 +418,236 @@ export default function AdminMigration() {
             Документы
           </TabsTrigger>
         </TabsList>
+
+        {/* Web Scraping Tab */}
+        <TabsContent value="web-scrape" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Newspaper className="h-5 w-5" />
+                Импорт новостей и блогов с gig26.ru
+              </CardTitle>
+              <CardDescription>
+                Парсинг статей с ноября 2024 по январь 2025
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {scrapingPhase === 'idle' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Нажмите кнопку, чтобы начать поиск статей на старом сайте. 
+                    Процесс состоит из 3 этапов: обнаружение URL-ов, парсинг контента, импорт в базу.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      setScrapingPhase('discovering');
+                      setScrapeStats({ total: 0, scraped: 0, skipped: 0, errors: 0 });
+                      setDiscoveredUrls([]);
+                      setScrapedArticles([]);
+                      addLog("info", "Начинаем поиск статей на gig26.ru...");
+
+                      try {
+                        const { data, error } = await supabase.functions.invoke('scrape-old-site', {
+                          body: { action: 'discover' }
+                        });
+
+                        if (error) throw error;
+
+                        const urls = data.urls || [];
+                        setDiscoveredUrls(urls);
+                        setScrapeStats(prev => ({ ...prev, total: urls.length }));
+                        addLog("success", `Найдено ${urls.length} потенциальных статей`);
+                        
+                        if (urls.length > 0) {
+                          setScrapingPhase('scraping');
+                          // Start scraping
+                          stopScrapingRef.current = false;
+                          let scraped = 0;
+                          let skipped = 0;
+                          let errors = 0;
+                          const articles: typeof scrapedArticles = [];
+
+                          for (let i = 0; i < urls.length; i++) {
+                            if (stopScrapingRef.current) break;
+
+                            const url = urls[i];
+                            try {
+                              const { data: scrapeData, error: scrapeError } = await supabase.functions.invoke('scrape-old-site', {
+                                body: { 
+                                  action: 'scrape', 
+                                  url,
+                                  startMonth: '11',
+                                  endMonth: '01',
+                                  year: '2024'
+                                }
+                              });
+
+                              if (scrapeError) {
+                                errors++;
+                                addLog("error", `Ошибка: ${url}`);
+                              } else if (scrapeData.skipped) {
+                                skipped++;
+                              } else if (scrapeData.article && scrapeData.article.title) {
+                                scraped++;
+                                articles.push(scrapeData.article);
+                                addLog("success", `Спарсено: ${scrapeData.article.title.substring(0, 50)}...`);
+                              } else {
+                                skipped++;
+                              }
+                            } catch (e) {
+                              errors++;
+                            }
+
+                            setScrapeProgress(Math.round(((i + 1) / urls.length) * 100));
+                            setScrapeStats({ total: urls.length, scraped, skipped, errors });
+                            
+                            // Small delay
+                            await new Promise(r => setTimeout(r, 300));
+                          }
+
+                          setScrapedArticles(articles);
+                          addLog("info", `Парсинг завершён. Спарсено: ${scraped}, Пропущено: ${skipped}, Ошибок: ${errors}`);
+                          
+                          if (articles.length > 0) {
+                            setScrapingPhase('importing');
+                          } else {
+                            setScrapingPhase('idle');
+                          }
+                        } else {
+                          setScrapingPhase('idle');
+                        }
+                      } catch (e) {
+                        addLog("error", `Ошибка: ${(e as Error).message}`);
+                        setScrapingPhase('idle');
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    Начать поиск статей
+                  </Button>
+                </div>
+              )}
+
+              {scrapingPhase === 'discovering' && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Поиск URL-ов статей...</span>
+                  </div>
+                </div>
+              )}
+
+              {scrapingPhase === 'scraping' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span>Парсинг статей: {scrapeStats.scraped} / {scrapeStats.total}</span>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => {
+                        stopScrapingRef.current = true;
+                      }}
+                    >
+                      Остановить
+                    </Button>
+                  </div>
+                  <Progress value={scrapeProgress} className="h-2" />
+                  <div className="flex gap-2">
+                    <Badge variant="default" className="bg-green-500">{scrapeStats.scraped} спарсено</Badge>
+                    <Badge variant="secondary">{scrapeStats.skipped} пропущено</Badge>
+                    <Badge variant="destructive">{scrapeStats.errors} ошибок</Badge>
+                  </div>
+                </div>
+              )}
+
+              {scrapingPhase === 'importing' && (
+                <div className="space-y-4">
+                  <p className="text-sm">
+                    Найдено {scrapedArticles.length} статей для импорта.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={async () => {
+                        addLog("info", `Импорт ${scrapedArticles.length} статей...`);
+                        
+                        const newsArticles = scrapedArticles.filter(a => a.type === 'news');
+                        const blogArticles = scrapedArticles.filter(a => a.type === 'blog');
+
+                        // Import news
+                        if (newsArticles.length > 0) {
+                          const { data, error } = await supabase.functions.invoke('import-news', {
+                            body: { news: newsArticles }
+                          });
+                          if (error) {
+                            addLog("error", `Ошибка импорта новостей: ${error.message}`);
+                          } else {
+                            addLog("success", `Новости: добавлено ${data.inserted}, пропущено ${data.skipped}`);
+                          }
+                        }
+
+                        // Import blogs
+                        if (blogArticles.length > 0) {
+                          const { data, error } = await supabase.functions.invoke('import-blogs', {
+                            body: { blogs: blogArticles }
+                          });
+                          if (error) {
+                            addLog("error", `Ошибка импорта блогов: ${error.message}`);
+                          } else {
+                            addLog("success", `Блоги: добавлено ${data.inserted}, пропущено ${data.skipped}`);
+                          }
+                        }
+
+                        toast({
+                          title: "Импорт завершён",
+                          description: `Обработано ${scrapedArticles.length} статей`
+                        });
+                        setScrapingPhase('idle');
+                      }}
+                      className="gap-2"
+                    >
+                      <Play className="h-4 w-4" />
+                      Импортировать все
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setScrapingPhase('idle')}
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+
+                  <ScrollArea className="h-[200px] border rounded-md p-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Заголовок</TableHead>
+                          <TableHead>Тип</TableHead>
+                          <TableHead>Дата</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {scrapedArticles.slice(0, 50).map((article, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="max-w-[300px] truncate">{article.title}</TableCell>
+                            <TableCell>
+                              <Badge variant={article.type === 'news' ? 'default' : 'secondary'}>
+                                {article.type === 'news' ? 'Новость' : 'Блог'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(article.published_at).toLocaleDateString('ru-RU')}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* PDF Migration */}
         <TabsContent value="pdf-migration" className="space-y-4">
