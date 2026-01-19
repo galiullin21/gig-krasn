@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -116,8 +116,12 @@ export default function AdminMigration() {
     error?: string;
   }>>([]);
 
+  // Ref to control stopping auto migration
+  const stopMigrationRef = useRef(false);
+
   // Auto migration function
   const runAutoMigration = async () => {
+    stopMigrationRef.current = false;
     setAutoMigrating(true);
     setTotalMigrated(0);
     setTotalErrors(0);
@@ -127,7 +131,7 @@ export default function AdminMigration() {
     let migrated = 0;
     let errors = 0;
     
-    while (remaining > 0 && autoMigrating !== false) {
+    while (remaining > 0 && !stopMigrationRef.current) {
       try {
         const { data, error } = await supabase.functions.invoke("migrate-archives", {
           body: { limit: 2, offset: 0 }
@@ -136,7 +140,6 @@ export default function AdminMigration() {
         if (error) {
           errors++;
           setTotalErrors(prev => prev + 1);
-          // Wait a bit and try again
           await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
@@ -152,7 +155,6 @@ export default function AdminMigration() {
         
         if (remaining === 0) break;
         
-        // Small delay between batches
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (err) {
         console.error("Migration error:", err);
@@ -170,6 +172,7 @@ export default function AdminMigration() {
   };
 
   const stopAutoMigration = () => {
+    stopMigrationRef.current = true;
     setAutoMigrating(false);
   };
 
