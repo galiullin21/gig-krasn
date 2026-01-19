@@ -43,6 +43,8 @@ const AdminDocumentsList = lazy(() => import("./pages/admin/AdminDocumentsList")
 const AdminDocumentForm = lazy(() => import("./pages/admin/AdminDocumentForm"));
 const AdminGalleriesList = lazy(() => import("./pages/admin/AdminGalleriesList"));
 const AdminGalleryForm = lazy(() => import("./pages/admin/AdminGalleryForm"));
+const AdminVideosList = lazy(() => import("./pages/admin/AdminVideosList"));
+const AdminVideoForm = lazy(() => import("./pages/admin/AdminVideoForm"));
 const AdminArchiveList = lazy(() => import("./pages/admin/AdminArchiveList"));
 const AdminArchiveForm = lazy(() => import("./pages/admin/AdminArchiveForm"));
 const AdminAdsList = lazy(() => import("./pages/admin/AdminAdsList"));
@@ -138,6 +140,9 @@ const App = () => (
                     <Route path="galleries" element={<AdminGalleriesList />} />
                     <Route path="galleries/new" element={<AdminGalleryForm />} />
                     <Route path="galleries/:id" element={<AdminGalleryForm />} />
+                    <Route path="videos" element={<AdminVideosList />} />
+                    <Route path="videos/new" element={<AdminVideoForm />} />
+                    <Route path="videos/:id" element={<AdminVideoForm />} />
                     <Route path="archive" element={<AdminArchiveList />} />
                     <Route path="archive/new" element={<AdminArchiveForm />} />
                     <Route path="archive/:id" element={<AdminArchiveForm />} />
