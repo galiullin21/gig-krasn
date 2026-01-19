@@ -139,10 +139,10 @@ function generateSlug(title: string): string {
     .substring(0, 100);
 }
 
-async function runImport(supabaseUrl: string, supabaseKey: string) {
+async function runImport(supabaseUrl: string, supabaseKey: string, startDateStr?: string, endDateStr?: string) {
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const startDate = new Date('2024-11-01');
-  const endDate = new Date('2024-12-23');
+  const startDate = new Date(startDateStr || '2025-11-01');
+  const endDate = new Date(endDateStr || '2025-12-23');
   
   console.log(`Starting full import from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
@@ -245,11 +245,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const { action, url: articleUrl } = body;
+    const { action, url: articleUrl, startDate: startDateParam, endDate: endDateParam } = body;
 
     if (action === 'full-import') {
-      // Start background task
-      EdgeRuntime.waitUntil(runImport(supabaseUrl, supabaseKey));
+      // Start background task with optional date params
+      EdgeRuntime.waitUntil(runImport(supabaseUrl, supabaseKey, startDateParam, endDateParam));
       
       return new Response(
         JSON.stringify({ success: true, message: 'Import started in background. Check logs for progress.' }),
