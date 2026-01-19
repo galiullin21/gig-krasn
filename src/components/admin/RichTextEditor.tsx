@@ -30,15 +30,19 @@ import {
   Code,
   Minus,
   Video,
+  Upload,
+  Loader2,
 } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RichTextEditorProps {
   value: string;
@@ -50,7 +54,9 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
   const [linkUrl, setLinkUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -116,6 +122,62 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
       setImageUrl("");
     }
   }, [editor, imageUrl]);
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Выберите изображение",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Размер файла не должен превышать 5 МБ",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `content/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(filePath);
+
+      editor?.chain().focus().setImage({ src: urlData.publicUrl }).run();
+      toast({ title: "Изображение загружено" });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка загрузки",
+        description: error.message,
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [editor, toast]);
 
   const addVideo = useCallback(() => {
     if (videoUrl) {
@@ -322,18 +384,59 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Вставить изображение</p>
-              <Input
-                placeholder="https://example.com/image.jpg"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addImage()}
-              />
-              <Button size="sm" onClick={addImage}>
-                Вставить
-              </Button>
-            </div>
+            <Tabs defaultValue="upload" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upload">Загрузить</TabsTrigger>
+                <TabsTrigger value="url">По ссылке</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload" className="space-y-3 pt-3">
+                <p className="text-sm font-medium">Загрузить изображение</p>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    disabled={isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Выбрать файл
+                      </>
+                    )}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    disabled={isUploading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    PNG, JPG, WEBP (до 5 МБ)
+                  </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="url" className="space-y-3 pt-3">
+                <p className="text-sm font-medium">Вставить по ссылке</p>
+                <Input
+                  placeholder="https://example.com/image.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addImage()}
+                />
+                <Button size="sm" onClick={addImage}>
+                  Вставить
+                </Button>
+              </TabsContent>
+            </Tabs>
           </PopoverContent>
         </Popover>
 
