@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,9 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, Upload, X, Image, Video, Link2, Play, Plus, Youtube } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Upload, X, Image, Video, Link2, Play, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCrosspost } from "@/hooks/useCrosspost";
 
@@ -91,29 +89,6 @@ const getVideoThumbnail = (video: VideoItem): string | null => {
   if (video.type === "youtube") {
     const id = extractYoutubeId(video.url);
     if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-  }
-  return null;
-};
-
-const getVideoEmbed = (video: VideoItem): string | null => {
-  switch (video.type) {
-    case "youtube": {
-      const id = extractYoutubeId(video.url);
-      if (id) return `https://www.youtube.com/embed/${id}`;
-      break;
-    }
-    case "vk": {
-      const ids = extractVkVideoId(video.url);
-      if (ids) return `https://vk.com/video_ext.php?oid=${ids.ownerId}&id=${ids.videoId}`;
-      break;
-    }
-    case "rutube": {
-      const id = extractRutubeId(video.url);
-      if (id) return `https://rutube.ru/play/embed/${id}`;
-      break;
-    }
-    case "direct":
-      return video.url;
   }
   return null;
 };
@@ -312,13 +287,13 @@ export default function AdminGalleryForm() {
       const wasPublished = !!galleryItem?.published_at;
       const isPublishing = data.published && !wasPublished;
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         title: data.title,
         slug: data.slug,
         type: data.type,
         cover_image: data.cover_image || null,
-        images: images as unknown as Json,
-        videos: videos as unknown as Json,
+        images: images,
+        videos: videos,
         published_at: data.published ? new Date().toISOString() : null,
       };
 
@@ -327,14 +302,14 @@ export default function AdminGalleryForm() {
       if (isEditing) {
         const { error } = await supabase
           .from("galleries")
-          .update(payload)
+          .update(payload as any)
           .eq("id", id);
         if (error) throw error;
         toast({ title: "Галерея обновлена" });
       } else {
         const { data: insertData, error } = await supabase
           .from("galleries")
-          .insert(payload)
+          .insert(payload as any)
           .select("id")
           .single();
         if (error) throw error;
@@ -552,7 +527,7 @@ export default function AdminGalleryForm() {
                     {/* Форма добавления видео */}
                     <div className="p-4 border rounded-lg bg-muted/30 space-y-3">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Youtube className="h-4 w-4 text-red-500" />
+                        <Play className="h-4 w-4 text-red-500" />
                         <span>YouTube</span>
                         <span className="mx-1">•</span>
                         <span className="text-blue-500">VK Video</span>
