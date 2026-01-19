@@ -88,6 +88,9 @@ export default function AdminMigration() {
 
   // PDF Migration state
   const [pdfMigrating, setPdfMigrating] = useState(false);
+  const [autoMigrating, setAutoMigrating] = useState(false);
+  const [totalMigrated, setTotalMigrated] = useState(0);
+  const [totalErrors, setTotalErrors] = useState(0);
   const [pdfStats, setPdfStats] = useState<{
     processed: number;
     success: number;
@@ -103,6 +106,72 @@ export default function AdminMigration() {
       error?: string;
     }>;
   } | null>(null);
+  const [allResults, setAllResults] = useState<Array<{
+    id: string;
+    issue_number: string;
+    year: number;
+    status: string;
+    oldUrl?: string;
+    newUrl?: string;
+    error?: string;
+  }>>([]);
+
+  // Auto migration function
+  const runAutoMigration = async () => {
+    setAutoMigrating(true);
+    setTotalMigrated(0);
+    setTotalErrors(0);
+    setAllResults([]);
+    
+    let remaining = 999;
+    let migrated = 0;
+    let errors = 0;
+    
+    while (remaining > 0 && autoMigrating !== false) {
+      try {
+        const { data, error } = await supabase.functions.invoke("migrate-archives", {
+          body: { limit: 2, offset: 0 }
+        });
+        
+        if (error) {
+          errors++;
+          setTotalErrors(prev => prev + 1);
+          // Wait a bit and try again
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        
+        remaining = data.remaining;
+        migrated += data.success;
+        errors += data.errors;
+        
+        setTotalMigrated(migrated);
+        setTotalErrors(errors);
+        setPdfStats(data);
+        setAllResults(prev => [...prev, ...data.results]);
+        
+        if (remaining === 0) break;
+        
+        // Small delay between batches
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (err) {
+        console.error("Migration error:", err);
+        errors++;
+        setTotalErrors(prev => prev + 1);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    setAutoMigrating(false);
+    toast({
+      title: "Миграция завершена!",
+      description: `Всего мигрировано: ${migrated}, Ошибок: ${errors}`,
+    });
+  };
+
+  const stopAutoMigration = () => {
+    setAutoMigrating(false);
+  };
 
   const addLog = (type: ImportLog["type"], message: string) => {
     setLogs(prev => [...prev, { type, message, timestamp: new Date() }]);
@@ -345,42 +414,26 @@ export default function AdminMigration() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Button
-                  onClick={async () => {
-                    setPdfMigrating(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke("migrate-archives", {
-                        body: { limit: 5, offset: 0 }
-                      });
-                      
-                      if (error) throw error;
-                      setPdfStats(data);
-                      
-                      toast({
-                        title: "Миграция завершена",
-                        description: `Обработано: ${data.processed}, Успешно: ${data.success}, Ошибок: ${data.errors}`,
-                      });
-                    } catch (error) {
-                      toast({
-                        title: "Ошибка миграции",
-                        description: (error as Error).message,
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setPdfMigrating(false);
-                    }
-                  }}
-                  disabled={pdfMigrating}
-                  className="gap-2"
-                >
-                  {pdfMigrating ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
+              <div className="flex flex-wrap items-center gap-4">
+                {!autoMigrating ? (
+                  <Button
+                    onClick={runAutoMigration}
+                    disabled={pdfMigrating}
+                    className="gap-2 bg-green-600 hover:bg-green-700"
+                  >
                     <Play className="h-4 w-4" />
-                  )}
-                  Мигрировать 5 файлов
-                </Button>
+                    Запустить автоматическую миграцию всех файлов
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={stopAutoMigration}
+                    variant="destructive"
+                    className="gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Остановить миграцию
+                  </Button>
+                )}
                 
                 <Button
                   variant="outline"
@@ -388,7 +441,7 @@ export default function AdminMigration() {
                     setPdfMigrating(true);
                     try {
                       const { data, error } = await supabase.functions.invoke("migrate-archives", {
-                        body: { limit: 20, offset: 0 }
+                        body: { limit: 2, offset: 0 }
                       });
                       
                       if (error) throw error;
@@ -408,7 +461,7 @@ export default function AdminMigration() {
                       setPdfMigrating(false);
                     }
                   }}
-                  disabled={pdfMigrating}
+                  disabled={pdfMigrating || autoMigrating}
                   className="gap-2"
                 >
                   {pdfMigrating ? (
@@ -416,9 +469,31 @@ export default function AdminMigration() {
                   ) : (
                     <Play className="h-4 w-4" />
                   )}
-                  Мигрировать 20 файлов
+                  Мигрировать 2 файла вручную
                 </Button>
               </div>
+
+              {autoMigrating && (
+                <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <RefreshCw className="h-5 w-5 animate-spin text-green-600" />
+                    <span className="font-medium text-green-700 dark:text-green-300">
+                      Автоматическая миграция в процессе...
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <span>Мигрировано: <strong>{totalMigrated}</strong></span>
+                    <span>Ошибок: <strong>{totalErrors}</strong></span>
+                    <span>Осталось: <strong>{pdfStats?.remaining || "?"}</strong></span>
+                  </div>
+                  {pdfStats?.remaining && (
+                    <Progress 
+                      value={totalMigrated / (totalMigrated + (pdfStats.remaining || 1)) * 100} 
+                      className="mt-2 h-2" 
+                    />
+                  )}
+                </div>
+              )}
 
               {pdfStats && (
                 <div className="space-y-4">
