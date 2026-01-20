@@ -236,7 +236,7 @@ export function AdminLayout() {
     <div className="flex h-screen bg-background">
       {/* Mobile Header */}
       {isMobile && (
-        <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b flex items-center px-4 gap-3">
+        <header className="fixed top-0 left-0 right-0 z-50 h-14 admin-glass-sidebar border-b border-border/50 flex items-center px-4 gap-3">
           <BurgerMenu 
             isOpen={sidebarOpen} 
             onClick={() => setSidebarOpen(!sidebarOpen)} 
@@ -248,7 +248,7 @@ export function AdminLayout() {
       {/* Mobile Sidebar (Sheet) */}
       {isMobile && (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="w-72 p-0 flex flex-col">
+          <SheetContent side="left" className="w-72 p-0 flex flex-col admin-glass-sidebar border-r-border/30">
             <SheetHeader className="sr-only">
               <SheetTitle>Меню админ-панели</SheetTitle>
             </SheetHeader>
@@ -259,7 +259,7 @@ export function AdminLayout() {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <aside className="w-64 border-r bg-card flex flex-col shrink-0">
+        <aside className="w-64 border-r border-border/50 admin-glass-sidebar flex flex-col shrink-0">
           <SidebarContent />
         </aside>
       )}
