@@ -30,12 +30,12 @@ export function useCrosspost() {
       if (data?.success) {
         const successPlatforms = data.results
           ?.filter((r: any) => r.success)
-          .map((r: any) => r.platform === "vk" ? "VK" : "Telegram")
+          .map((r: any) => r.platform === "vk" ? "VK" : "Одноклассники")
           .join(", ");
 
         const failedPlatforms = data.results
           ?.filter((r: any) => !r.success)
-          .map((r: any) => `${r.platform === "vk" ? "VK" : "Telegram"}: ${r.error}`)
+          .map((r: any) => `${r.platform === "vk" ? "VK" : "Одноклассники"}: ${r.error}`)
           .join("; ");
 
         if (successPlatforms) {
