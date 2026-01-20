@@ -20,11 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Send, ExternalLink, Loader2 } from "lucide-react";
+import { RefreshCw, Send, ExternalLink, Loader2, Settings, History } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { useCrosspost } from "@/hooks/useCrosspost";
+import { CrosspostSettings } from "@/components/admin/CrosspostSettings";
 
 type ContentType = "news" | "blog" | "gallery";
 
@@ -166,17 +168,37 @@ export default function AdminCrosspost() {
         <div>
           <h1 className="text-3xl font-condensed font-bold">Кросс-постинг</h1>
           <p className="text-muted-foreground mt-1">
-            История публикаций в VK и Telegram
+            Автоматическая публикация в VK и Telegram
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => queryClient.invalidateQueries({ queryKey: ["crosspost-logs"] })}
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Обновить
-        </Button>
       </div>
+
+      <Tabs defaultValue="settings" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="settings" className="gap-2">
+            <Settings className="h-4 w-4" />
+            Настройки соцсетей
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <History className="h-4 w-4" />
+            История публикаций
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="settings">
+          <CrosspostSettings />
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["crosspost-logs"] })}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Обновить
+            </Button>
+          </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
@@ -314,7 +336,9 @@ export default function AdminCrosspost() {
             </Table>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
