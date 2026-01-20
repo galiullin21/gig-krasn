@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
+import { useFavicon } from "@/hooks/useFavicon";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load all pages for code splitting
@@ -78,9 +79,10 @@ function PageLoader() {
   );
 }
 
-// Component that sets up realtime notifications
-function RealtimeNotificationsProvider({ children }: { children: React.ReactNode }) {
+// Component that sets up realtime notifications and dynamic favicon
+function AppProviders({ children }: { children: React.ReactNode }) {
   useRealtimeNotifications();
+  useFavicon();
   return <>{children}</>;
 }
 
@@ -97,7 +99,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <RealtimeNotificationsProvider>
+        <AppProviders>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -170,7 +172,7 @@ const App = () => (
               </Suspense>
             </BrowserRouter>
           </TooltipProvider>
-        </RealtimeNotificationsProvider>
+        </AppProviders>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

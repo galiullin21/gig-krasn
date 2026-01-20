@@ -13,12 +13,14 @@ import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { CrosspostSettings } from "@/components/admin/CrosspostSettings";
 import { useAuth } from "@/hooks/useAuth";
-import { Save, Globe, Phone, Mail, MapPin, Shield, Share2 } from "lucide-react";
+import { Save, Globe, Phone, Mail, MapPin, Shield, Share2, Image } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SiteSettings {
   site_name: string;
   site_description: string;
   logo_url: string;
+  favicon_url: string;
   phone: string;
   email: string;
   address: string;
@@ -38,6 +40,7 @@ const defaultSettings: SiteSettings = {
   site_name: "Город и горожане",
   site_description: "Городская газета Железногорска",
   logo_url: "",
+  favicon_url: "",
   phone: "",
   email: "",
   address: "",
@@ -215,6 +218,48 @@ export default function AdminSettings() {
                   placeholder="© 2024 Город и горожане. Все права защищены."
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Favicon
+              </CardTitle>
+              <CardDescription>
+                Иконка сайта, отображаемая во вкладке браузера
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  Рекомендуемый размер: 32x32 или 64x64 пикселей. Поддерживаемые форматы: PNG, ICO, SVG.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-2">
+                <Label>Иконка сайта (Favicon)</Label>
+                <ImageUpload
+                  value={settings.favicon_url}
+                  onChange={(url) => updateSetting("favicon_url", url)}
+                  bucket="images"
+                  folder="settings"
+                />
+              </div>
+              
+              {settings.favicon_url && (
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <img 
+                    src={settings.favicon_url} 
+                    alt="Favicon preview" 
+                    className="w-8 h-8 object-contain"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Предпросмотр favicon (32x32)
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
