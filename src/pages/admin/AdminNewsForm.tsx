@@ -40,6 +40,7 @@ import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
 import { TagSelector } from "@/components/admin/TagSelector";
+import { ArticleImportDialog } from "@/components/admin/ArticleImportDialog";
 import { useCrosspost } from "@/hooks/useCrosspost";
 import { generateSlug } from "@/lib/transliterate";
 
@@ -320,6 +321,26 @@ export default function AdminNewsForm() {
 
   const selectedDocs = documents?.filter((d) => selectedDocumentIds.includes(d.id)) || [];
 
+  const handleArticleImport = (data: {
+    title: string;
+    lead: string;
+    content: string;
+    cover_image: string;
+    gallery_images: string[];
+    source_url: string;
+  }) => {
+    form.setValue("title", data.title);
+    form.setValue("slug", generateSlug(data.title));
+    form.setValue("lead", data.lead);
+    form.setValue("content", data.content);
+    if (data.cover_image) {
+      form.setValue("cover_image", data.cover_image);
+    }
+    if (data.gallery_images && data.gallery_images.length > 0) {
+      form.setValue("gallery_images", data.gallery_images);
+    }
+  };
+
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center gap-4 mb-6">
@@ -328,11 +349,12 @@ export default function AdminNewsForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-condensed font-bold">
             {isEditing ? "Редактировать новость" : "Новая новость"}
           </h1>
         </div>
+        {!isEditing && <ArticleImportDialog onImport={handleArticleImport} />}
       </div>
 
       <Form {...form}>

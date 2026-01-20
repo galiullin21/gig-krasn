@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.migrate-archives]
 verify_jwt = false
+
+[functions.scrape-old-site]
+verify_jwt = false
+
+[functions.scrape-article]
+verify_jwt = false
