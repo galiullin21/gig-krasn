@@ -183,11 +183,61 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
   }, [editor, toast]);
 
   const addVideo = useCallback(() => {
-    if (videoUrl) {
+    if (!videoUrl) return;
+    
+    // Check if it's YouTube/Vimeo (use Tiptap extension)
+    const isYoutube = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
+    const isVimeo = videoUrl.includes("vimeo.com");
+    
+    if (isYoutube || isVimeo) {
       editor?.chain().focus().setYoutubeVideo({ src: videoUrl }).run();
-      setVideoUrl("");
+    } else {
+      // For VK Video, Rutube, and other platforms - insert as iframe HTML
+      let embedUrl = "";
+      let platformName = "Видео";
+      
+      // VK Video
+      if (videoUrl.includes("vk.com/video") || videoUrl.includes("vk.com/clip")) {
+        const match = videoUrl.match(/video(-?\d+)_(\d+)/);
+        if (match) {
+          embedUrl = `https://vk.com/video_ext.php?oid=${match[1]}&id=${match[2]}`;
+          platformName = "VK Video";
+        }
+      }
+      // Rutube
+      else if (videoUrl.includes("rutube.ru")) {
+        const match = videoUrl.match(/video\/([a-zA-Z0-9]+)/);
+        if (match) {
+          embedUrl = `https://rutube.ru/play/embed/${match[1]}`;
+          platformName = "Rutube";
+        }
+      }
+      
+      if (embedUrl) {
+        const videoHtml = `
+          <div class="video-embed" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 16px 0; border-radius: 8px;">
+            <iframe 
+              src="${embedUrl}" 
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+        `;
+        editor?.chain().focus().insertContent(videoHtml).run();
+        toast({ title: `${platformName} добавлено` });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Неподдерживаемый формат",
+          description: "Поддерживаются: YouTube, Vimeo, VK Video, Rutube",
+        });
+        return;
+      }
     }
-  }, [editor, videoUrl]);
+    
+    setVideoUrl("");
+  }, [editor, videoUrl, toast]);
 
   const insertGallery = useCallback((images: string[]) => {
     if (!editor || images.length === 0) return;
@@ -467,10 +517,10 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
               <Video className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80">
+        <PopoverContent className="w-80">
             <div className="space-y-2">
               <p className="text-sm font-medium">Вставить видео</p>
-              <p className="text-xs text-muted-foreground">YouTube, Vimeo</p>
+              <p className="text-xs text-muted-foreground">YouTube, Vimeo, VK Video, Rutube</p>
               <Input
                 placeholder="https://www.youtube.com/watch?v=..."
                 value={videoUrl}
@@ -480,6 +530,12 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
               <Button size="sm" onClick={addVideo}>
                 Вставить
               </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Примеры ссылок:<br/>
+                • YouTube: youtube.com/watch?v=...<br/>
+                • VK: vk.com/video-123_456<br/>
+                • Rutube: rutube.ru/video/abc123
+              </p>
             </div>
           </PopoverContent>
         </Popover>
