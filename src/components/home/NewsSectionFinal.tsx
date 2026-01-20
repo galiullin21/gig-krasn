@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getDay, subMonths, addMonths } from "date-fns";
@@ -7,6 +7,7 @@ import { ru } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
 export function NewsSectionFinal() {
@@ -90,8 +91,22 @@ export function NewsSectionFinal() {
         <div className="lg:col-span-4 space-y-6">
           {featuredNews.map((item) => (
             <article key={item.id} className="group">
+              <div className="flex items-start gap-2 mb-1">
+                {item.is_important && (
+                  <Badge variant="destructive" className="shrink-0 gap-1 text-[10px] px-1.5 py-0.5">
+                    <Flame className="w-3 h-3" />
+                    Важно
+                  </Badge>
+                )}
+                {item.is_featured && !item.is_important && (
+                  <Badge variant="secondary" className="shrink-0 gap-1 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-primary/20">
+                    <Star className="w-3 h-3" />
+                    Главная
+                  </Badge>
+                )}
+              </div>
               <Link to={`/news/${item.slug}`}>
-                <h3 className="font-condensed font-bold text-lg leading-tight line-clamp-3 group-hover:text-primary transition-colors mb-2">
+                <h3 className={`font-condensed font-bold text-lg leading-tight line-clamp-3 group-hover:text-primary transition-colors mb-2 ${item.is_important ? 'text-destructive' : ''}`}>
                   {item.title}
                 </h3>
               </Link>
@@ -119,7 +134,7 @@ export function NewsSectionFinal() {
           <div className="grid grid-cols-2 gap-4">
             {imageNews.map((item) => (
               <article key={item.id} className="group">
-                <Link to={`/news/${item.slug}`} className="block">
+                <Link to={`/news/${item.slug}`} className="block relative">
                   <div className="aspect-[4/3] overflow-hidden bg-muted mb-2">
                     {item.cover_image ? (
                       <OptimizedImage
@@ -134,9 +149,24 @@ export function NewsSectionFinal() {
                       </div>
                     )}
                   </div>
+                  {/* Badge overlay */}
+                  {(item.is_important || item.is_featured) && (
+                    <div className="absolute top-2 left-2">
+                      {item.is_important ? (
+                        <Badge variant="destructive" className="gap-1 text-[10px] px-1.5 py-0.5">
+                          <Flame className="w-3 h-3" />
+                          Важно
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="gap-1 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary">
+                          <Star className="w-3 h-3" />
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </Link>
                 <Link to={`/news/${item.slug}`}>
-                  <h4 className="text-sm font-medium leading-snug line-clamp-3 group-hover:text-primary transition-colors">
+                  <h4 className={`text-sm font-medium leading-snug line-clamp-3 group-hover:text-primary transition-colors ${item.is_important ? 'text-destructive font-bold' : ''}`}>
                     {item.title}
                   </h4>
                 </Link>
