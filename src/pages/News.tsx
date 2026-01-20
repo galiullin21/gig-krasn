@@ -4,10 +4,11 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Star } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Calendar } from "@/components/ui/calendar";
 import { AdBanner } from "@/components/home/AdBanner";
@@ -47,6 +48,8 @@ export default function News() {
         .from("news")
         .select("*, categories(name, slug)", { count: "exact" })
         .eq("status", "published")
+        .order("is_important", { ascending: false })
+        .order("is_featured", { ascending: false })
         .order("published_at", { ascending: false });
 
       if (selectedCategory !== "all") {
@@ -165,10 +168,22 @@ export default function News() {
             ) : newsData?.news && newsData.news.length > 0 ? (
               <div className="space-y-0">
                 {newsData.news.map((item) => (
-                  <article key={item.id} className="border-b py-6 first:pt-0">
+                  <article key={item.id} className={`border-b py-6 first:pt-0 ${item.is_important ? 'bg-destructive/5 -mx-4 px-4 rounded-lg' : ''}`}>
                     <div className="flex gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {item.is_important && (
+                            <Badge variant="destructive" className="gap-1 text-[10px] px-1.5 py-0.5">
+                              <Flame className="w-3 h-3" />
+                              Важно
+                            </Badge>
+                          )}
+                          {item.is_featured && !item.is_important && (
+                            <Badge variant="secondary" className="gap-1 text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border-primary/20">
+                              <Star className="w-3 h-3" />
+                              Главная
+                            </Badge>
+                          )}
                           {item.categories?.name && (
                             <span className="text-xs font-medium text-primary uppercase">
                               {item.categories.name}
@@ -181,7 +196,7 @@ export default function News() {
                           </span>
                         </div>
                         <Link to={`/news/${item.slug}`}>
-                          <h2 className="font-bold text-lg leading-tight hover:text-primary transition-colors mb-2">
+                          <h2 className={`font-bold text-lg leading-tight hover:text-primary transition-colors mb-2 ${item.is_important ? 'text-destructive' : ''}`}>
                             {item.title}
                           </h2>
                         </Link>
@@ -194,13 +209,20 @@ export default function News() {
                       {item.cover_image && (
                         <Link
                           to={`/news/${item.slug}`}
-                          className="w-40 h-28 flex-shrink-0 overflow-hidden rounded bg-muted"
+                          className="w-40 h-28 flex-shrink-0 overflow-hidden rounded bg-muted relative"
                         >
                           <OptimizedImage
                             src={item.cover_image}
                             alt={item.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                           />
+                          {item.is_important && (
+                            <div className="absolute top-1 left-1">
+                              <Badge variant="destructive" className="gap-0.5 text-[9px] px-1 py-0">
+                                <Flame className="w-2.5 h-2.5" />
+                              </Badge>
+                            </div>
+                          )}
                         </Link>
                       )}
                     </div>
