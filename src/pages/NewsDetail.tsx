@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { ContentRenderer } from "@/components/content/ContentRenderer";
 import { EmbeddedGallery } from "@/components/content/EmbeddedGallery";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,14 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Eye, Calendar, User, ArrowLeft, Pencil } from "lucide-react";
+import { Eye, Calendar, User, ArrowLeft, Pencil, X, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ReactionButtons } from "@/components/reactions/ReactionButtons";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { ShareButtons } from "@/components/share/ShareButtons";
 import { SEO } from "@/components/seo/SEO";
 import { TagList } from "@/components/tags/TagBadge";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/admin/ImageUpload";
+import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
+
+const RichTextEditor = lazy(() => import("@/components/admin/RichTextEditor").then(mod => ({ default: mod.RichTextEditor })));
 
 interface Tag {
   id: string;
@@ -30,6 +37,16 @@ export default function NewsDetail() {
   const viewTracked = useRef(false);
   const { isEditor, isAdmin } = useAuth();
   const canEdit = isEditor || isAdmin;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Inline editing state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedLead, setEditedLead] = useState("");
+  const [editedContent, setEditedContent] = useState("");
+  const [editedCoverImage, setEditedCoverImage] = useState("");
+  const [editedGalleryImages, setEditedGalleryImages] = useState<string[]>([]);
 
   const { data: news, isLoading } = useQuery({
     queryKey: ["news", slug],
@@ -98,6 +115,62 @@ export default function NewsDetail() {
     };
     trackView();
   }, [news?.id]);
+
+  // Initialize edit state when news loads
+  useEffect(() => {
+    if (news) {
+      setEditedTitle(news.title || "");
+      setEditedLead(news.lead || "");
+      setEditedContent(news.content || "");
+      setEditedCoverImage(news.cover_image || "");
+      setEditedGalleryImages(news.gallery_images || []);
+    }
+  }, [news]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("news")
+        .update({
+          title: editedTitle,
+          lead: editedLead,
+          content: editedContent,
+          cover_image: editedCoverImage || null,
+          gallery_images: editedGalleryImages,
+        })
+        .eq("id", news!.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["news", slug] });
+      setIsEditMode(false);
+      toast({
+        title: "Сохранено",
+        description: "Изменения успешно сохранены",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось сохранить изменения",
+        variant: "destructive",
+      });
+      console.error("Save error:", error);
+    },
+  });
+
+  const handleCancelEdit = () => {
+    if (news) {
+      setEditedTitle(news.title || "");
+      setEditedLead(news.lead || "");
+      setEditedContent(news.content || "");
+      setEditedCoverImage(news.cover_image || "");
+      setEditedGalleryImages(news.gallery_images || []);
+    }
+    setIsEditMode(false);
+  };
 
   const { data: similarNews } = useQuery({
     queryKey: ["similar-news", news?.category_id, news?.id],
@@ -174,7 +247,7 @@ export default function NewsDetail() {
       />
       
       <article className="container py-6 md:py-8 max-w-4xl">
-        {/* Back button and Edit button */}
+        {/* Back button and Edit buttons */}
         <div className="flex items-center justify-between mb-6">
           <Link
             to="/news"
@@ -184,12 +257,50 @@ export default function NewsDetail() {
             Все новости
           </Link>
           {canEdit && (
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/admin/news/${news.id}`}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Редактировать
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              {!isEditMode ? (
+                <>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => setIsEditMode(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Редактировать здесь
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to={`/admin/news/${news.id}`}>
+                      Полный редактор
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => saveMutation.mutate()}
+                    disabled={saveMutation.isPending}
+                  >
+                    {saveMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Сохранить
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    disabled={saveMutation.isPending}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Отменить
+                  </Button>
+                </>
+              )}
+            </div>
           )}
         </div>
 
@@ -203,15 +314,33 @@ export default function NewsDetail() {
         )}
 
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-condensed font-bold text-foreground leading-tight mb-4">
-          {news.title}
-        </h1>
+        {isEditMode ? (
+          <Input
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            className="text-3xl md:text-4xl lg:text-5xl font-condensed font-bold leading-tight mb-4 h-auto py-2"
+            placeholder="Заголовок новости"
+          />
+        ) : (
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-condensed font-bold text-foreground leading-tight mb-4">
+            {news.title}
+          </h1>
+        )}
 
         {/* Lead */}
-        {news.lead && (
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
-            {news.lead}
-          </p>
+        {isEditMode ? (
+          <Textarea
+            value={editedLead}
+            onChange={(e) => setEditedLead(e.target.value)}
+            className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6 min-h-[80px]"
+            placeholder="Лид (краткое описание)"
+          />
+        ) : (
+          news.lead && (
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+              {news.lead}
+            </p>
+          )
         )}
 
         {/* Tags */}
@@ -240,29 +369,67 @@ export default function NewsDetail() {
         </div>
 
         {/* Photo Gallery Carousel */}
-        {news.gallery_images && news.gallery_images.length > 0 && (
-          <div className="mb-8">
+        {isEditMode ? (
+          <div className="mb-8 p-4 border rounded-lg bg-muted/30">
             <h2 className="text-lg font-condensed font-bold mb-4 text-muted-foreground uppercase tracking-wide">
               Карусель фото
             </h2>
-            <EmbeddedGallery images={news.gallery_images} />
+            <MultiImageUpload
+              value={editedGalleryImages}
+              onChange={setEditedGalleryImages}
+              bucket="images"
+              folder="news-gallery"
+              maxImages={20}
+            />
           </div>
+        ) : (
+          news.gallery_images && news.gallery_images.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-condensed font-bold mb-4 text-muted-foreground uppercase tracking-wide">
+                Карусель фото
+              </h2>
+              <EmbeddedGallery images={news.gallery_images} />
+            </div>
+          )
         )}
 
         {/* Cover image */}
-        {news.cover_image && (
-          <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-8">
-            <img
-              src={news.cover_image}
-              alt={news.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
+        {isEditMode ? (
+          <div className="mb-8 p-4 border rounded-lg bg-muted/30">
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">Обложка</h3>
+            <ImageUpload
+              value={editedCoverImage}
+              onChange={setEditedCoverImage}
+              bucket="images"
+              folder="news"
             />
           </div>
+        ) : (
+          news.cover_image && (
+            <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-8">
+              <img
+                src={news.cover_image}
+                alt={news.title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          )
         )}
 
         {/* Content */}
-        <ContentRenderer content={news.content || ""} />
+        {isEditMode ? (
+          <div className="mb-8 border rounded-lg overflow-hidden">
+            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+              <RichTextEditor
+                value={editedContent}
+                onChange={setEditedContent}
+              />
+            </Suspense>
+          </div>
+        ) : (
+          <ContentRenderer content={news.content || ""} />
+        )}
 
         {/* Attached Documents */}
         {news.documents && news.documents.length > 0 && (
