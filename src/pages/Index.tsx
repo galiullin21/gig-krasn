@@ -3,17 +3,14 @@ import { GallerySliderSection } from "@/components/home/GallerySliderSection";
 import { ArticlesSectionRedesign } from "@/components/home/ArticlesSectionRedesign";
 import { SmallNewsGrid } from "@/components/home/SmallNewsGrid";
 import { NewsSectionFinal } from "@/components/home/NewsSectionFinal";
+import { AdBanner } from "@/components/home/AdBanner";
 
 const Index = () => {
   return (
     <Layout>
-      {/* Top Ad Banner */}
-      <div className="bg-muted">
-        <div className="container py-6">
-          <div className="flex items-center justify-center min-h-[100px] text-muted-foreground">
-            <span>Рекламный баннер</span>
-          </div>
-        </div>
+      {/* Top Ad Banner - only shows if there's an active ad */}
+      <div className="container py-4">
+        <AdBanner position="header" />
       </div>
 
       {/* Main Content with white background */}
