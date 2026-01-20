@@ -475,10 +475,10 @@ export default function NewsDetail() {
           )
         )}
 
-        {/* Cover image */}
-        {isEditMode ? (
+        {/* Cover image - only shown in edit mode */}
+        {isEditMode && (
           <div className="mb-8 p-4 border rounded-lg bg-muted/30">
-            <h3 className="text-sm font-medium mb-3 text-muted-foreground">Обложка</h3>
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">Обложка (отображается только в списках)</h3>
             <ImageUpload
               value={editedCoverImage}
               onChange={setEditedCoverImage}
@@ -486,17 +486,6 @@ export default function NewsDetail() {
               folder="news"
             />
           </div>
-        ) : (
-          news.cover_image && (
-            <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-8">
-              <img
-                src={news.cover_image}
-                alt={news.title}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          )
         )}
 
         {/* Content */}
