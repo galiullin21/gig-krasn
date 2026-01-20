@@ -178,13 +178,13 @@ export function Header() {
           {/* Social Icons - Desktop */}
           <div className="hidden md:flex items-center gap-2">
             <a
-              href="https://t.me/gig26"
+              href="https://vk.com/gorod_i_gorozhane"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:opacity-80 transition-opacity"
-              aria-label="Telegram"
+              aria-label="VKontakte"
             >
-              <TelegramIcon />
+              <VKIcon />
             </a>
             <a
               href="https://ok.ru/gig26"
@@ -194,22 +194,6 @@ export function Header() {
               aria-label="Odnoklassniki"
             >
               <OKIcon />
-            </a>
-            <a
-              href="https://vk.com/gig26"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-80 transition-opacity"
-              aria-label="VKontakte"
-            >
-              <VKIcon />
-            </a>
-            <a
-              href="#"
-              className="hover:opacity-80 transition-opacity"
-              aria-label="Viber"
-            >
-              <ViberIcon />
             </a>
           </div>
 
