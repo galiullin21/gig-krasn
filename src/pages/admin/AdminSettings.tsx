@@ -11,8 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { CrosspostSettings } from "@/components/admin/CrosspostSettings";
 import { useAuth } from "@/hooks/useAuth";
-import { Save, Globe, Phone, Mail, MapPin, Shield } from "lucide-react";
+import { Save, Globe, Phone, Mail, MapPin, Shield, Share2 } from "lucide-react";
 
 interface SiteSettings {
   site_name: string;
@@ -156,6 +157,10 @@ export default function AdminSettings() {
           <TabsTrigger value="general">Основные</TabsTrigger>
           <TabsTrigger value="contacts">Контакты</TabsTrigger>
           <TabsTrigger value="social">Соцсети</TabsTrigger>
+          <TabsTrigger value="crosspost">
+            <Share2 className="h-4 w-4 mr-1.5" />
+            Кросс-постинг
+          </TabsTrigger>
           {isDeveloper && <TabsTrigger value="auth">Авторизация</TabsTrigger>}
         </TabsList>
 
@@ -313,6 +318,10 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="crosspost" className="space-y-6">
+          <CrosspostSettings />
         </TabsContent>
 
         {isDeveloper && (
