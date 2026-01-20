@@ -7,25 +7,31 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Check, X, Eye, EyeOff, ExternalLink, AlertCircle } from "lucide-react";
+import { Save, Check, X, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CrosspostSettingsData {
   vk_enabled: boolean;
   vk_group_id: string;
   vk_access_token: string;
-  telegram_enabled: boolean;
-  telegram_bot_token: string;
-  telegram_channel_id: string;
+  ok_enabled: boolean;
+  ok_application_id: string;
+  ok_application_key: string;
+  ok_application_secret: string;
+  ok_access_token: string;
+  ok_group_id: string;
 }
 
 const defaultSettings: CrosspostSettingsData = {
   vk_enabled: false,
   vk_group_id: "",
   vk_access_token: "",
-  telegram_enabled: false,
-  telegram_bot_token: "",
-  telegram_channel_id: "",
+  ok_enabled: false,
+  ok_application_id: "",
+  ok_application_key: "",
+  ok_application_secret: "",
+  ok_access_token: "",
+  ok_group_id: "",
 };
 
 export function CrosspostSettings() {
@@ -33,7 +39,8 @@ export function CrosspostSettings() {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<CrosspostSettingsData>(defaultSettings);
   const [showVkToken, setShowVkToken] = useState(false);
-  const [showTelegramToken, setShowTelegramToken] = useState(false);
+  const [showOkSecret, setShowOkSecret] = useState(false);
+  const [showOkToken, setShowOkToken] = useState(false);
 
   const { data: savedSettings, isLoading } = useQuery({
     queryKey: ["crosspost-settings"],
@@ -45,9 +52,12 @@ export function CrosspostSettings() {
           "crosspost_vk_enabled",
           "crosspost_vk_group_id",
           "crosspost_vk_access_token",
-          "crosspost_telegram_enabled",
-          "crosspost_telegram_bot_token",
-          "crosspost_telegram_channel_id",
+          "crosspost_ok_enabled",
+          "crosspost_ok_application_id",
+          "crosspost_ok_application_key",
+          "crosspost_ok_application_secret",
+          "crosspost_ok_access_token",
+          "crosspost_ok_group_id",
         ]);
 
       if (error) throw error;
@@ -62,9 +72,12 @@ export function CrosspostSettings() {
         vk_enabled: settingsMap.vk_enabled === true,
         vk_group_id: (settingsMap.vk_group_id as string) || "",
         vk_access_token: (settingsMap.vk_access_token as string) || "",
-        telegram_enabled: settingsMap.telegram_enabled === true,
-        telegram_bot_token: (settingsMap.telegram_bot_token as string) || "",
-        telegram_channel_id: (settingsMap.telegram_channel_id as string) || "",
+        ok_enabled: settingsMap.ok_enabled === true,
+        ok_application_id: (settingsMap.ok_application_id as string) || "",
+        ok_application_key: (settingsMap.ok_application_key as string) || "",
+        ok_application_secret: (settingsMap.ok_application_secret as string) || "",
+        ok_access_token: (settingsMap.ok_access_token as string) || "",
+        ok_group_id: (settingsMap.ok_group_id as string) || "",
       };
     },
   });
@@ -81,9 +94,12 @@ export function CrosspostSettings() {
         ["crosspost_vk_enabled", newSettings.vk_enabled],
         ["crosspost_vk_group_id", newSettings.vk_group_id],
         ["crosspost_vk_access_token", newSettings.vk_access_token],
-        ["crosspost_telegram_enabled", newSettings.telegram_enabled],
-        ["crosspost_telegram_bot_token", newSettings.telegram_bot_token],
-        ["crosspost_telegram_channel_id", newSettings.telegram_channel_id],
+        ["crosspost_ok_enabled", newSettings.ok_enabled],
+        ["crosspost_ok_application_id", newSettings.ok_application_id],
+        ["crosspost_ok_application_key", newSettings.ok_application_key],
+        ["crosspost_ok_application_secret", newSettings.ok_application_secret],
+        ["crosspost_ok_access_token", newSettings.ok_access_token],
+        ["crosspost_ok_group_id", newSettings.ok_group_id],
       ];
 
       for (const [key, value] of entries) {
@@ -129,7 +145,15 @@ export function CrosspostSettings() {
   };
 
   const isVkConfigured = settings.vk_group_id && settings.vk_access_token;
-  const isTelegramConfigured = settings.telegram_bot_token && settings.telegram_channel_id;
+  const isOkConfigured = settings.ok_application_id && settings.ok_application_key && 
+                         settings.ok_application_secret && settings.ok_access_token && settings.ok_group_id;
+
+  // OK.ru icon SVG path
+  const OkIcon = () => (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm0 4.8c1.983 0 3.6 1.617 3.6 3.6S13.983 12 12 12s-3.6-1.617-3.6-3.6S10.017 4.8 12 4.8zm0 2.4c-.663 0-1.2.537-1.2 1.2s.537 1.2 1.2 1.2 1.2-.537 1.2-1.2-.537-1.2-1.2-1.2zm4.243 8.357a6.002 6.002 0 01-2.656 1.131l2.291 2.291a1.2 1.2 0 11-1.697 1.697L12 18.494l-2.181 2.182a1.2 1.2 0 11-1.697-1.697l2.291-2.291a6.002 6.002 0 01-2.656-1.131 1.2 1.2 0 111.486-1.886A3.598 3.598 0 0012 14.4a3.598 3.598 0 002.757-1.129 1.2 1.2 0 111.486 1.886z"/>
+    </svg>
+  );
 
   return (
     <div className="space-y-6">
@@ -167,11 +191,9 @@ export function CrosspostSettings() {
         </div>
 
         <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-          </svg>
-          <span className="font-medium">Telegram</span>
-          {isTelegramConfigured ? (
+          <OkIcon />
+          <span className="font-medium">Одноклассники</span>
+          {isOkConfigured ? (
             <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
               <Check className="h-3 w-3 mr-1" />
               Подключён
@@ -258,45 +280,65 @@ export function CrosspostSettings() {
           </CardContent>
         </Card>
 
-        {/* Telegram Settings */}
+        {/* OK.ru Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              <svg className="h-5 w-5 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm0 4.8c1.983 0 3.6 1.617 3.6 3.6S13.983 12 12 12s-3.6-1.617-3.6-3.6S10.017 4.8 12 4.8zm0 2.4c-.663 0-1.2.537-1.2 1.2s.537 1.2 1.2 1.2 1.2-.537 1.2-1.2-.537-1.2-1.2-1.2zm4.243 8.357a6.002 6.002 0 01-2.656 1.131l2.291 2.291a1.2 1.2 0 11-1.697 1.697L12 18.494l-2.181 2.182a1.2 1.2 0 11-1.697-1.697l2.291-2.291a6.002 6.002 0 01-2.656-1.131 1.2 1.2 0 111.486-1.886A3.598 3.598 0 0012 14.4a3.598 3.598 0 002.757-1.129 1.2 1.2 0 111.486 1.886z"/>
               </svg>
-              Telegram
+              Одноклассники
             </CardTitle>
             <CardDescription>
-              Публикация в Telegram-канал
+              Публикация в группу Одноклассники
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Создайте бота через{" "}
+                Создайте приложение на{" "}
                 <a
-                  href="https://t.me/BotFather"
+                  href="https://ok.ru/devaccess"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline"
                 >
-                  @BotFather
+                  ok.ru/devaccess
                 </a>{" "}
-                и добавьте его админом в канал.
+                и получите Application ID, Public Key, Secret Key и Access Token с правами GROUP_CONTENT, PHOTO_CONTENT.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="telegram_bot_token">Bot Token</Label>
+              <Label htmlFor="ok_application_id">Application ID</Label>
+              <Input
+                id="ok_application_id"
+                value={settings.ok_application_id}
+                onChange={(e) => updateSetting("ok_application_id", e.target.value)}
+                placeholder="12345678"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ok_application_key">Application Key (Public)</Label>
+              <Input
+                id="ok_application_key"
+                value={settings.ok_application_key}
+                onChange={(e) => updateSetting("ok_application_key", e.target.value)}
+                placeholder="CABCDEFGH"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ok_application_secret">Application Secret Key</Label>
               <div className="relative">
                 <Input
-                  id="telegram_bot_token"
-                  type={showTelegramToken ? "text" : "password"}
-                  value={settings.telegram_bot_token}
-                  onChange={(e) => updateSetting("telegram_bot_token", e.target.value)}
-                  placeholder="123456789:ABCdefGHIjklMNOpqrs..."
+                  id="ok_application_secret"
+                  type={showOkSecret ? "text" : "password"}
+                  value={settings.ok_application_secret}
+                  onChange={(e) => updateSetting("ok_application_secret", e.target.value)}
+                  placeholder="ABCDEF123456..."
                   className="pr-10"
                 />
                 <Button
@@ -304,9 +346,9 @@ export function CrosspostSettings() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-0 top-0 h-full"
-                  onClick={() => setShowTelegramToken(!showTelegramToken)}
+                  onClick={() => setShowOkSecret(!showOkSecret)}
                 >
-                  {showTelegramToken ? (
+                  {showOkSecret ? (
                     <EyeOff className="h-4 w-4" />
                   ) : (
                     <Eye className="h-4 w-4" />
@@ -316,15 +358,42 @@ export function CrosspostSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="telegram_channel_id">ID канала</Label>
+              <Label htmlFor="ok_access_token">Access Token</Label>
+              <div className="relative">
+                <Input
+                  id="ok_access_token"
+                  type={showOkToken ? "text" : "password"}
+                  value={settings.ok_access_token}
+                  onChange={(e) => updateSetting("ok_access_token", e.target.value)}
+                  placeholder="tkn1.a.xxx..."
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full"
+                  onClick={() => setShowOkToken(!showOkToken)}
+                >
+                  {showOkToken ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ok_group_id">ID группы</Label>
               <Input
-                id="telegram_channel_id"
-                value={settings.telegram_channel_id}
-                onChange={(e) => updateSetting("telegram_channel_id", e.target.value)}
-                placeholder="@channel_name или -1001234567890"
+                id="ok_group_id"
+                value={settings.ok_group_id}
+                onChange={(e) => updateSetting("ok_group_id", e.target.value)}
+                placeholder="12345678901234"
               />
               <p className="text-xs text-muted-foreground">
-                Юзернейм с @ или числовой ID
+                Числовой ID группы (можно найти в URL группы)
               </p>
             </div>
           </CardContent>
