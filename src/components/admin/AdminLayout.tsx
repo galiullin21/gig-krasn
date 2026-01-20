@@ -213,7 +213,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-background admin-theme">
+    <div className="flex h-screen bg-background">
       {/* Mobile Header */}
       {isMobile && (
         <header className="fixed top-0 left-0 right-0 z-50 h-14 admin-glass-sidebar border-b border-border/50 flex items-center px-4 gap-3">
