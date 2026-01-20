@@ -390,13 +390,50 @@ export default function AdminNewsForm() {
                       </FormItem>
                     )}
                   />
+                </CardContent>
+              </Card>
 
+              {/* Gallery Section - Photo Carousel */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Карусель фото</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="gallery_images"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormDescription className="mb-4">
+                          Загрузите изображения для отображения в виде карусели на странице новости (над содержанием)
+                        </FormDescription>
+                        <FormControl>
+                          <MultiImageUpload
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            bucket="images"
+                            folder="news-gallery"
+                            maxImages={20}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Content Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Содержание</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <FormField
                     control={form.control}
                     name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Содержание</FormLabel>
                         <FormControl>
                           <Suspense fallback={<Skeleton className="h-64 w-full" />}>
                             <RichTextEditor
@@ -483,35 +520,6 @@ export default function AdminNewsForm() {
                 </CardContent>
               </Card>
 
-              {/* Gallery Section - moved here for visibility */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Галерея изображений (карусель)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField
-                    control={form.control}
-                    name="gallery_images"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormDescription className="mb-4">
-                          Загрузите несколько изображений для отображения в виде карусели на странице новости
-                        </FormDescription>
-                        <FormControl>
-                          <MultiImageUpload
-                            value={field.value || []}
-                            onChange={field.onChange}
-                            bucket="images"
-                            folder="news-gallery"
-                            maxImages={20}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
             </div>
 
             {/* Sidebar */}
