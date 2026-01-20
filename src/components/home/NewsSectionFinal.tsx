@@ -18,8 +18,10 @@ export function NewsSectionFinal() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("news")
-        .select("id, title, lead, cover_image, slug, published_at, category_id, categories(name)")
+        .select("id, title, lead, cover_image, slug, published_at, category_id, is_featured, is_important, categories(name)")
         .eq("status", "published")
+        .order("is_important", { ascending: false })
+        .order("is_featured", { ascending: false })
         .order("published_at", { ascending: false })
         .limit(10);
       if (error) throw error;

@@ -12,8 +12,10 @@ export function SmallNewsGrid() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("news")
-        .select("id, title, cover_image, slug, published_at, category_id, categories(name)")
+        .select("id, title, cover_image, slug, published_at, category_id, is_featured, is_important, categories(name)")
         .eq("status", "published")
+        .order("is_important", { ascending: false })
+        .order("is_featured", { ascending: false })
         .order("published_at", { ascending: false })
         .range(0, 3);
       if (error) throw error;
