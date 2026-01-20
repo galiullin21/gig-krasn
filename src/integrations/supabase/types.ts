@@ -481,6 +481,7 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"]
           title: string
           updated_at: string
+          video_urls: string[] | null
           views_count: number | null
         }
         Insert: {
@@ -499,6 +500,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"]
           title: string
           updated_at?: string
+          video_urls?: string[] | null
           views_count?: number | null
         }
         Update: {
@@ -517,6 +519,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
           updated_at?: string
+          video_urls?: string[] | null
           views_count?: number | null
         }
         Relationships: [
