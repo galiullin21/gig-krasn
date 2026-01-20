@@ -26,9 +26,15 @@ export function ThemeProvider({
   storageKey = "gig-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem(storageKey) as Theme;
+    // If stored theme is "system" or "dark", default to light for main site
+    if (stored === "dark" || stored === "system") {
+      localStorage.setItem(storageKey, "light");
+      return "light";
+    }
+    return stored || defaultTheme;
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
