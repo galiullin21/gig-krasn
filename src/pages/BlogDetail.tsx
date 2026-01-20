@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { sanitizeHtml } from "@/lib/sanitize";
+import { ContentRenderer } from "@/components/content/ContentRenderer";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -258,10 +258,7 @@ export default function BlogDetail() {
         )}
 
         {/* Content */}
-        <div
-          className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-condensed prose-a:text-primary"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content || "") }}
-        />
+        <ContentRenderer content={blog.content || ""} />
 
         {/* Share buttons */}
         <div className="mt-8 pt-6 border-t">
