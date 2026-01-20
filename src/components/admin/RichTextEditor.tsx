@@ -196,8 +196,8 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
       let embedUrl = "";
       let platformName = "Видео";
       
-      // VK Video
-      if (videoUrl.includes("vk.com/video") || videoUrl.includes("vk.com/clip")) {
+      // VK Video (vk.com и vkvideo.ru)
+      if (videoUrl.includes("vk.com/video") || videoUrl.includes("vk.com/clip") || videoUrl.includes("vkvideo.ru")) {
         const match = videoUrl.match(/video(-?\d+)_(\d+)/);
         if (match) {
           embedUrl = `https://vk.com/video_ext.php?oid=${match[1]}&id=${match[2]}`;
