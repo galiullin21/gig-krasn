@@ -93,44 +93,44 @@
     --sidebar-ring: 4 82% 56%;
   }
 
-  /* Admin Panel - Telegram-style dark blue theme */
+  /* Admin Panel - Dark theme with red accents */
   .admin-theme {
-    --background: 220 25% 11%;
-    --foreground: 210 40% 96%;
+    --background: 0 0% 9%;
+    --foreground: 0 0% 96%;
 
-    --card: 220 25% 14%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 220 30% 16%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 14%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 210 100% 52%;
+    --primary: 4 82% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 25% 18%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 220 20% 20%;
-    --muted-foreground: 215 20% 60%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 210 100% 52%;
+    --accent: 4 82% 56%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 22%;
-    --input: 220 20% 22%;
-    --ring: 210 100% 52%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 4 82% 56%;
 
-    --sidebar-background: 220 28% 12%;
-    --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 210 100% 52%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 4 82% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 25% 18%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 220 20% 20%;
-    --sidebar-ring: 210 100% 52%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 4 82% 56%;
   }
 }
 
@@ -240,51 +240,51 @@
 
 /* Admin Panel Glassmorphism Styles */
 .admin-theme .admin-glass {
-  background: hsla(220, 25%, 14%, 0.85);
+  background: hsla(0, 0%, 12%, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid hsla(220, 20%, 28%, 0.4);
+  border: 1px solid hsla(0, 0%, 25%, 0.4);
 }
 
 .admin-theme .admin-glass-sidebar {
   background: linear-gradient(
     180deg,
-    hsla(220, 28%, 13%, 0.95) 0%,
-    hsla(220, 25%, 11%, 0.98) 100%
+    hsla(0, 0%, 11%, 0.95) 0%,
+    hsla(0, 0%, 9%, 0.98) 100%
   );
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
 
 .admin-theme .admin-glass-card {
-  background: hsla(220, 25%, 16%, 0.75);
+  background: hsla(0, 0%, 14%, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid hsla(220, 20%, 30%, 0.3);
+  border: 1px solid hsla(0, 0%, 25%, 0.3);
   box-shadow: 
-    0 4px 30px hsla(220, 30%, 5%, 0.3),
-    inset 0 1px 0 hsla(220, 30%, 40%, 0.1);
+    0 4px 30px hsla(0, 0%, 5%, 0.3),
+    inset 0 1px 0 hsla(0, 0%, 35%, 0.1);
   transition: all 0.3s ease;
 }
 
 .admin-theme .admin-glass-card:hover {
-  background: hsla(220, 25%, 18%, 0.8);
-  border-color: hsla(220, 20%, 35%, 0.4);
+  background: hsla(0, 0%, 16%, 0.8);
+  border-color: hsla(4, 82%, 56%, 0.3);
   box-shadow: 
-    0 8px 40px hsla(220, 30%, 5%, 0.4),
-    inset 0 1px 0 hsla(220, 30%, 45%, 0.15);
+    0 8px 40px hsla(0, 0%, 5%, 0.4),
+    inset 0 1px 0 hsla(0, 0%, 40%, 0.15);
 }
 
 .admin-theme .admin-glass-input {
-  background: hsla(220, 25%, 12%, 0.6);
+  background: hsla(0, 0%, 10%, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid hsla(220, 20%, 25%, 0.5);
+  border: 1px solid hsla(0, 0%, 22%, 0.5);
   transition: all 0.2s ease;
 }
 
 .admin-theme .admin-glass-input:focus {
-  background: hsla(220, 25%, 14%, 0.7);
-  border-color: hsla(210, 100%, 52%, 0.5);
-  box-shadow: 0 0 0 3px hsla(210, 100%, 52%, 0.15);
+  background: hsla(0, 0%, 12%, 0.7);
+  border-color: hsla(4, 82%, 56%, 0.5);
+  box-shadow: 0 0 0 3px hsla(4, 82%, 56%, 0.15);
 }
