@@ -13,11 +13,13 @@ import { Eye, Calendar, User, ArrowLeft, Pencil, X, Save, Loader2 } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReactionButtons } from "@/components/reactions/ReactionButtons";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { ShareButtons } from "@/components/share/ShareButtons";
 import { SEO } from "@/components/seo/SEO";
 import { TagList } from "@/components/tags/TagBadge";
+import { TagSelector } from "@/components/admin/TagSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "@/components/admin/ImageUpload";
@@ -30,6 +32,12 @@ interface Tag {
   name: string;
   slug: string;
   type: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 export default function NewsDetail() {
@@ -47,6 +55,8 @@ export default function NewsDetail() {
   const [editedContent, setEditedContent] = useState("");
   const [editedCoverImage, setEditedCoverImage] = useState("");
   const [editedGalleryImages, setEditedGalleryImages] = useState<string[]>([]);
+  const [editedCategoryId, setEditedCategoryId] = useState<string | null>(null);
+  const [editedTagIds, setEditedTagIds] = useState<string[]>([]);
 
   const { data: news, isLoading } = useQuery({
     queryKey: ["news", slug],
@@ -97,6 +107,21 @@ export default function NewsDetail() {
     enabled: !!slug,
   });
 
+  // Fetch categories for edit mode
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories", "news"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, slug")
+        .eq("type", "news")
+        .order("name");
+      if (error) throw error;
+      return data as Category[];
+    },
+    enabled: isEditMode,
+  });
+
   // Track view count - only once per page load
   useEffect(() => {
     const trackView = async () => {
@@ -124,12 +149,15 @@ export default function NewsDetail() {
       setEditedContent(news.content || "");
       setEditedCoverImage(news.cover_image || "");
       setEditedGalleryImages(news.gallery_images || []);
+      setEditedCategoryId(news.category_id || null);
+      setEditedTagIds(news.tags?.map((t: Tag) => t.id) || []);
     }
   }, [news]);
 
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Update news record
       const { error } = await supabase
         .from("news")
         .update({
@@ -138,10 +166,30 @@ export default function NewsDetail() {
           content: editedContent,
           cover_image: editedCoverImage || null,
           gallery_images: editedGalleryImages,
+          category_id: editedCategoryId,
         })
         .eq("id", news!.id);
 
       if (error) throw error;
+
+      // Update tags - delete existing and insert new
+      const currentTagIds = news!.tags?.map((t: Tag) => t.id) || [];
+      const tagsToRemove = currentTagIds.filter((id: string) => !editedTagIds.includes(id));
+      const tagsToAdd = editedTagIds.filter((id) => !currentTagIds.includes(id));
+
+      if (tagsToRemove.length > 0) {
+        await supabase
+          .from("news_tags")
+          .delete()
+          .eq("news_id", news!.id)
+          .in("tag_id", tagsToRemove);
+      }
+
+      if (tagsToAdd.length > 0) {
+        await supabase
+          .from("news_tags")
+          .insert(tagsToAdd.map((tagId) => ({ news_id: news!.id, tag_id: tagId })));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["news", slug] });
@@ -168,6 +216,8 @@ export default function NewsDetail() {
       setEditedContent(news.content || "");
       setEditedCoverImage(news.cover_image || "");
       setEditedGalleryImages(news.gallery_images || []);
+      setEditedCategoryId(news.category_id || null);
+      setEditedTagIds(news.tags?.map((t: Tag) => t.id) || []);
     }
     setIsEditMode(false);
   };
@@ -305,12 +355,33 @@ export default function NewsDetail() {
         </div>
 
         {/* Category */}
-        {news.categories?.name && (
-          <Link to={`/news?category=${news.categories.slug}`}>
-            <Badge variant="secondary" className="mb-4">
-              {news.categories.name}
-            </Badge>
-          </Link>
+        {isEditMode ? (
+          <div className="mb-4">
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Категория</label>
+            <Select 
+              value={editedCategoryId || ""} 
+              onValueChange={(val) => setEditedCategoryId(val || null)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Выберите категорию" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          news.categories?.name && (
+            <Link to={`/news?category=${news.categories.slug}`}>
+              <Badge variant="secondary" className="mb-4">
+                {news.categories.name}
+              </Badge>
+            </Link>
+          )
         )}
 
         {/* Title */}
@@ -344,8 +415,19 @@ export default function NewsDetail() {
         )}
 
         {/* Tags */}
-        {news.tags && news.tags.length > 0 && (
-          <TagList tags={news.tags} className="mb-4" />
+        {isEditMode ? (
+          <div className="mb-4 p-4 border rounded-lg bg-muted/30">
+            <label className="text-sm font-medium text-muted-foreground mb-3 block">Теги</label>
+            <TagSelector 
+              type="news" 
+              selectedTagIds={editedTagIds} 
+              onChange={setEditedTagIds} 
+            />
+          </div>
+        ) : (
+          news.tags && news.tags.length > 0 && (
+            <TagList tags={news.tags} className="mb-4" />
+          )
         )}
 
         {/* Meta info */}
