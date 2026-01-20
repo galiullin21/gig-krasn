@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ContentRenderer } from "@/components/content/ContentRenderer";
+import { EmbeddedGallery } from "@/components/content/EmbeddedGallery";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -237,6 +238,16 @@ export default function NewsDetail() {
             {news.views_count || 0} просмотров
           </span>
         </div>
+
+        {/* Photo Gallery Carousel */}
+        {news.gallery_images && news.gallery_images.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-condensed font-bold mb-4 text-muted-foreground uppercase tracking-wide">
+              Карусель фото
+            </h2>
+            <EmbeddedGallery images={news.gallery_images} />
+          </div>
+        )}
 
         {/* Cover image */}
         {news.cover_image && (
