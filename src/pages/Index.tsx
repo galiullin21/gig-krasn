@@ -1,7 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { GallerySliderSection } from "@/components/home/GallerySliderSection";
 import { ArticlesSectionRedesign } from "@/components/home/ArticlesSectionRedesign";
-import { SmallNewsGrid } from "@/components/home/SmallNewsGrid";
 import { NewsSectionFinal } from "@/components/home/NewsSectionFinal";
 import { AdBanner } from "@/components/home/AdBanner";
 
@@ -16,17 +15,14 @@ const Index = () => {
       {/* Main Content with white background */}
       <div className="bg-card">
         <div className="container py-6">
+          {/* News Section with Calendar - FIRST */}
+          <NewsSectionFinal />
+
           {/* Photo & Video Galleries Slider */}
           <GallerySliderSection />
 
           {/* Articles Section with Slider */}
           <ArticlesSectionRedesign />
-
-          {/* Small News Grid (4 items) */}
-          <SmallNewsGrid />
-
-          {/* News Section with Calendar */}
-          <NewsSectionFinal />
         </div>
       </div>
     </Layout>
