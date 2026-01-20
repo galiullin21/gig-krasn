@@ -31,6 +31,7 @@ import {
   Minus,
   Video,
   Upload,
+  Images,
   Loader2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -43,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GalleryInsertDialog } from "./GalleryInsertDialog";
 
 interface RichTextEditorProps {
   value: string;
@@ -55,6 +57,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
   const [imageUrl, setImageUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const editor = useEditor({
@@ -185,6 +188,23 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
       setVideoUrl("");
     }
   }, [editor, videoUrl]);
+
+  const insertGallery = useCallback((images: string[]) => {
+    if (!editor || images.length === 0) return;
+    
+    // Create a gallery HTML block
+    const galleryHtml = `
+      <div class="embedded-gallery" data-images='${JSON.stringify(images)}'>
+        <div class="gallery-placeholder" style="background: hsl(var(--muted)); border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
+          <p style="margin: 0; color: hsl(var(--muted-foreground));">📸 Галерея-карусель (${images.length} изображений)</p>
+          <p style="margin: 4px 0 0; font-size: 12px; color: hsl(var(--muted-foreground));">Карусель будет отображена на сайте</p>
+        </div>
+      </div>
+    `;
+    
+    editor.chain().focus().insertContent(galleryHtml).run();
+    toast({ title: `Галерея добавлена (${images.length} фото)` });
+  }, [editor, toast]);
 
   if (!editor) {
     return null;
@@ -463,10 +483,29 @@ export function RichTextEditor({ value, onChange, placeholder = "Начните 
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Gallery */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setIsGalleryDialogOpen(true)}
+          title="Вставить галерею-карусель"
+        >
+          <Images className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Editor Content */}
       <EditorContent editor={editor} />
+
+      {/* Gallery Insert Dialog */}
+      <GalleryInsertDialog
+        open={isGalleryDialogOpen}
+        onOpenChange={setIsGalleryDialogOpen}
+        onInsert={insertGallery}
+      />
     </div>
   );
 }

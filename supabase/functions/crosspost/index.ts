@@ -28,10 +28,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const vkToken = Deno.env.get("VK_ACCESS_TOKEN");
-    const vkGroupId = Deno.env.get("VK_GROUP_ID");
-    const telegramBotToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
-    const telegramChannelId = Deno.env.get("TELEGRAM_CHANNEL_ID");
 
     // Authorization check
     const authHeader = req.headers.get("Authorization");
@@ -80,6 +76,30 @@ Deno.serve(async (req) => {
     }
 
     console.log(`User ${userId} authorized with role: ${roleData[0].role}`);
+
+    // Fetch crosspost settings from database
+    const { data: settingsData } = await supabase
+      .from("site_settings")
+      .select("key, value")
+      .in("key", [
+        "crosspost_vk_group_id",
+        "crosspost_vk_access_token",
+        "crosspost_telegram_bot_token",
+        "crosspost_telegram_channel_id",
+      ]);
+
+    const settings: Record<string, string> = {};
+    settingsData?.forEach((item: { key: string; value: unknown }) => {
+      settings[item.key] = item.value as string;
+    });
+
+    const vkGroupId = settings.crosspost_vk_group_id || "";
+    const vkToken = settings.crosspost_vk_access_token || "";
+    const telegramBotToken = settings.crosspost_telegram_bot_token || "";
+    const telegramChannelId = settings.crosspost_telegram_channel_id || "";
+
+    console.log("VK configured:", !!vkGroupId && !!vkToken);
+    console.log("Telegram configured:", !!telegramBotToken && !!telegramChannelId);
 
     const { content_type, content_id }: CrosspostRequest = await req.json();
 
