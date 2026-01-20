@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { ContentRenderer } from "@/components/content/ContentRenderer";
 import { EmbeddedGallery } from "@/components/content/EmbeddedGallery";
+import { VideoCarousel } from "@/components/content/VideoCarousel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -500,6 +501,16 @@ export default function NewsDetail() {
           </div>
         ) : (
           <ContentRenderer content={news.content || ""} />
+        )}
+
+        {/* Video Carousel - After content */}
+        {news.video_urls && news.video_urls.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-condensed font-bold mb-4 text-muted-foreground uppercase tracking-wide">
+              Видео
+            </h2>
+            <VideoCarousel videoUrls={news.video_urls} />
+          </div>
         )}
 
         {/* Attached Documents */}

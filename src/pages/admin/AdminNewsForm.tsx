@@ -39,6 +39,7 @@ import { ArrowLeft, Loader2, Save, Eye, FileText, X, CalendarIcon } from "lucide
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { MultiImageUpload } from "@/components/admin/MultiImageUpload";
+import { VideoUrlInput } from "@/components/admin/VideoUrlInput";
 import { TagSelector } from "@/components/admin/TagSelector";
 import { ArticleImportDialog } from "@/components/admin/ArticleImportDialog";
 import { useCrosspost } from "@/hooks/useCrosspost";
@@ -53,6 +54,7 @@ const newsSchema = z.object({
   content: z.string().optional(),
   cover_image: z.string().optional(),
   gallery_images: z.array(z.string()).optional(),
+  video_urls: z.array(z.string()).optional(),
   category_id: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]),
   is_featured: z.boolean(),
@@ -96,6 +98,7 @@ export default function AdminNewsForm() {
       content: "",
       cover_image: "",
       gallery_images: [],
+      video_urls: [],
       category_id: "",
       status: "draft",
       is_featured: false,
@@ -179,6 +182,7 @@ export default function AdminNewsForm() {
         content: newsItem.content || "",
         cover_image: newsItem.cover_image || "",
         gallery_images: (newsItem as any).gallery_images || [],
+        video_urls: (newsItem as any).video_urls || [],
         category_id: newsItem.category_id || "",
         status: newsItem.status,
         is_featured: newsItem.is_featured || false,
@@ -234,6 +238,7 @@ export default function AdminNewsForm() {
         category_id: data.category_id || null,
         cover_image: data.cover_image || null,
         gallery_images: data.gallery_images || [],
+        video_urls: data.video_urls || [],
         lead: data.lead || null,
         content: data.content || null,
         author_id: user?.id,
@@ -471,6 +476,33 @@ export default function AdminNewsForm() {
                               placeholder="Начните писать новость..."
                             />
                           </Suspense>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Video Carousel Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Видео</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="video_urls"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormDescription className="mb-4">
+                          Добавьте ссылки на видео для отображения в блоке после содержания
+                        </FormDescription>
+                        <FormControl>
+                          <VideoUrlInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
