@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AdminOnlineIndicator } from "./AdminOnlineIndicator";
+import { AdminThemeToggle } from "./AdminThemeToggle";
 import { BurgerMenu } from "@/components/layout/BurgerMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -63,10 +65,29 @@ const developerOnlyItems = [
 
 export function AdminLayout() {
   const { user, isEditor, isAdmin, isDeveloper, isLoading } = useAuth();
+  const { setTheme
+  } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [previousTheme, setPreviousTheme] = useState<string | null>(null);
+
+  // Apply dark theme for admin panel
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("gig-ui-theme");
+    if (!previousTheme) {
+      setPreviousTheme(savedTheme || "light");
+    }
+    setTheme("dark");
+    
+    return () => {
+      // Restore previous theme when leaving admin
+      if (previousTheme && previousTheme !== "dark") {
+        setTheme(previousTheme as "light" | "dark" | "system");
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isLoading && (!user || !isEditor)) {
@@ -102,14 +123,17 @@ export function AdminLayout() {
   const SidebarContent = () => (
     <>
       <div className="p-4 border-b">
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm">Вернуться на сайт</span>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm">Вернуться на сайт</span>
+          </Link>
+          <AdminThemeToggle />
+        </div>
       </div>
       
       <div className="p-4 border-b">
