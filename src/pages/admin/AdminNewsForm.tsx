@@ -79,6 +79,13 @@ export default function AdminNewsForm() {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
 
+  // Create default date with 12:00 time for new news
+  const getDefaultPublishedAt = () => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    return date;
+  };
+
   const form = useForm<NewsFormData>({
     resolver: zodResolver(newsSchema),
     defaultValues: {
@@ -92,7 +99,7 @@ export default function AdminNewsForm() {
       status: "draft",
       is_featured: false,
       is_important: false,
-      published_at: null,
+      published_at: getDefaultPublishedAt(),
     },
   });
 

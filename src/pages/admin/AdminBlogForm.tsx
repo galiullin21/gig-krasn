@@ -4,14 +4,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Eye, CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { generateSlug } from "@/lib/transliterate";
@@ -42,6 +48,7 @@ const blogSchema = z.object({
   cover_image: z.string().optional(),
   category_id: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]),
+  published_at: z.date().optional().nullable(),
 });
 
 type BlogFormData = z.infer<typeof blogSchema>;
@@ -57,6 +64,13 @@ export default function AdminBlogForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
+  // Create default date with 12:00 time for new blogs
+  const getDefaultPublishedAt = () => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    return date;
+  };
+
   const form = useForm<BlogFormData>({
     resolver: zodResolver(blogSchema),
     defaultValues: {
@@ -66,6 +80,7 @@ export default function AdminBlogForm() {
       cover_image: "",
       category_id: "",
       status: "draft",
+      published_at: getDefaultPublishedAt(),
     },
   });
 
@@ -117,6 +132,7 @@ export default function AdminBlogForm() {
         cover_image: blogItem.cover_image || "",
         category_id: blogItem.category_id || "",
         status: blogItem.status,
+        published_at: blogItem.published_at ? new Date(blogItem.published_at) : getDefaultPublishedAt(),
       });
     }
   }, [blogItem, form]);
@@ -134,6 +150,16 @@ export default function AdminBlogForm() {
       const wasPublished = blogItem?.status === "published";
       const isPublishing = data.status === "published" && !wasPublished;
 
+      // Determine published_at date
+      let publishedAt: string | null = null;
+      if (data.status === "published") {
+        if (data.published_at) {
+          publishedAt = data.published_at.toISOString();
+        } else {
+          publishedAt = new Date().toISOString();
+        }
+      }
+
       const payload = {
         title: data.title,
         slug: data.slug,
@@ -142,7 +168,7 @@ export default function AdminBlogForm() {
         cover_image: data.cover_image || null,
         content: data.content || null,
         author_id: user?.id,
-        published_at: data.status === "published" ? new Date().toISOString() : null,
+        published_at: publishedAt,
       };
 
       let contentId = id;
@@ -318,6 +344,100 @@ export default function AdminBlogForm() {
                         <FormMessage />
                       </FormItem>
                     )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="published_at"
+                    render={({ field }) => {
+                      const handleDateSelect = (date: Date | undefined) => {
+                        if (date) {
+                          if (field.value) {
+                            date.setHours(field.value.getHours());
+                            date.setMinutes(field.value.getMinutes());
+                          } else {
+                            date.setHours(12, 0, 0, 0);
+                          }
+                          field.onChange(date);
+                        } else {
+                          field.onChange(null);
+                        }
+                      };
+
+                      const handleTimeChange = (type: 'hours' | 'minutes', value: string) => {
+                        const numValue = parseInt(value, 10);
+                        if (isNaN(numValue)) return;
+                        
+                        const date = field.value ? new Date(field.value) : new Date();
+                        if (type === 'hours') {
+                          date.setHours(Math.max(0, Math.min(23, numValue)));
+                        } else {
+                          date.setMinutes(Math.max(0, Math.min(59, numValue)));
+                        }
+                        field.onChange(date);
+                      };
+
+                      return (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Дата и время публикации</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "d MMMM yyyy, HH:mm", { locale: ru })
+                                  ) : (
+                                    <span>Выберите дату и время</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={handleDateSelect}
+                                initialFocus
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                              <div className="border-t p-3 flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Время:</span>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={23}
+                                  value={field.value ? format(field.value, "HH") : "12"}
+                                  onChange={(e) => handleTimeChange('hours', e.target.value)}
+                                  className="w-16 text-center"
+                                  placeholder="ЧЧ"
+                                />
+                                <span>:</span>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={59}
+                                  value={field.value ? format(field.value, "mm") : "00"}
+                                  onChange={(e) => handleTimeChange('minutes', e.target.value)}
+                                  className="w-16 text-center"
+                                  placeholder="ММ"
+                                />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <FormDescription>
+                            Если не указать — будет текущая дата при публикации
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
