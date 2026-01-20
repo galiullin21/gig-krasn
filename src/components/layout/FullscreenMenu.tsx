@@ -447,20 +447,12 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
           {/* Social links */}
           <div className="flex items-center gap-4 mt-12 pt-6 border-t">
             <a
-              href="https://vk.com/gig26"
+              href="https://vk.com/gorod_i_gorozhane"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <VKIcon />
-            </a>
-            <a
-              href="https://t.me/gig26"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <TelegramIcon />
             </a>
             <a
               href="https://ok.ru/gig26"
@@ -469,12 +461,6 @@ export function FullscreenMenu({ isOpen, onClose }: FullscreenMenuProps) {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <OKIcon />
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ViberIcon />
             </a>
           </div>
         </div>
