@@ -161,6 +161,8 @@ export type Database = {
           created_at: string
           id: string
           published_at: string | null
+          scheduled_at: string | null
+          scheduled_crosspost: boolean | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
           title: string
@@ -175,6 +177,8 @@ export type Database = {
           created_at?: string
           id?: string
           published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_crosspost?: boolean | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
           title: string
@@ -189,6 +193,8 @@ export type Database = {
           created_at?: string
           id?: string
           published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_crosspost?: boolean | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
@@ -393,6 +399,8 @@ export type Database = {
           id: string
           images: Json | null
           published_at: string | null
+          scheduled_at: string | null
+          scheduled_crosspost: boolean | null
           slug: string
           title: string
           type: string
@@ -405,6 +413,8 @@ export type Database = {
           id?: string
           images?: Json | null
           published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_crosspost?: boolean | null
           slug: string
           title: string
           type?: string
@@ -417,6 +427,8 @@ export type Database = {
           id?: string
           images?: Json | null
           published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_crosspost?: boolean | null
           slug?: string
           title?: string
           type?: string
@@ -477,6 +489,8 @@ export type Database = {
           is_important: boolean | null
           lead: string | null
           published_at: string | null
+          scheduled_at: string | null
+          scheduled_crosspost: boolean | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
           title: string
@@ -496,6 +510,8 @@ export type Database = {
           is_important?: boolean | null
           lead?: string | null
           published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_crosspost?: boolean | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
           title: string
@@ -515,6 +531,8 @@ export type Database = {
           is_important?: boolean | null
           lead?: string | null
           published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_crosspost?: boolean | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
