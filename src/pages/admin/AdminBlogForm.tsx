@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, Eye, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Eye, CalendarIcon, Clock, Share2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { generateSlug } from "@/lib/transliterate";
@@ -49,6 +50,8 @@ const blogSchema = z.object({
   category_id: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]),
   published_at: z.date().optional().nullable(),
+  scheduled_at: z.date().optional().nullable(),
+  scheduled_crosspost: z.boolean(),
 });
 
 type BlogFormData = z.infer<typeof blogSchema>;
@@ -81,6 +84,8 @@ export default function AdminBlogForm() {
       category_id: "",
       status: "draft",
       published_at: getDefaultPublishedAt(),
+      scheduled_at: null,
+      scheduled_crosspost: true,
     },
   });
 
@@ -133,6 +138,8 @@ export default function AdminBlogForm() {
         category_id: blogItem.category_id || "",
         status: blogItem.status,
         published_at: blogItem.published_at ? new Date(blogItem.published_at) : getDefaultPublishedAt(),
+        scheduled_at: blogItem.scheduled_at ? new Date(blogItem.scheduled_at) : null,
+        scheduled_crosspost: blogItem.scheduled_crosspost ?? true,
       });
     }
   }, [blogItem, form]);
@@ -149,6 +156,7 @@ export default function AdminBlogForm() {
     try {
       const wasPublished = blogItem?.status === "published";
       const isPublishing = data.status === "published" && !wasPublished;
+      const isScheduling = data.status === "draft" && data.scheduled_at && data.scheduled_at > new Date();
 
       // Determine published_at date
       let publishedAt: string | null = null;
@@ -160,6 +168,12 @@ export default function AdminBlogForm() {
         }
       }
 
+      // Determine scheduled_at
+      let scheduledAt: string | null = null;
+      if (isScheduling && data.scheduled_at) {
+        scheduledAt = data.scheduled_at.toISOString();
+      }
+
       const payload = {
         title: data.title,
         slug: data.slug,
@@ -169,6 +183,8 @@ export default function AdminBlogForm() {
         content: data.content || null,
         author_id: user?.id,
         published_at: publishedAt,
+        scheduled_at: scheduledAt,
+        scheduled_crosspost: data.scheduled_crosspost,
       };
 
       let contentId = id;
@@ -345,6 +361,136 @@ export default function AdminBlogForm() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Scheduled Publication Section */}
+                  {form.watch("status") === "draft" && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Отложенная публикация</span>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="scheduled_at"
+                        render={({ field }) => {
+                          const handleScheduleDateSelect = (date: Date | undefined) => {
+                            if (date) {
+                              if (field.value) {
+                                date.setHours(field.value.getHours());
+                                date.setMinutes(field.value.getMinutes());
+                              } else {
+                                date.setHours(12, 0, 0, 0);
+                              }
+                              field.onChange(date);
+                            } else {
+                              field.onChange(null);
+                            }
+                          };
+
+                          const handleScheduleTimeChange = (type: 'hours' | 'minutes', value: string) => {
+                            const numValue = parseInt(value, 10);
+                            if (isNaN(numValue)) return;
+                            const date = field.value ? new Date(field.value) : new Date();
+                            if (!field.value) date.setHours(12, 0, 0, 0);
+                            if (type === 'hours') {
+                              date.setHours(Math.max(0, Math.min(23, numValue)));
+                            } else {
+                              date.setMinutes(Math.max(0, Math.min(59, numValue)));
+                            }
+                            field.onChange(date);
+                          };
+
+                          return (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Запланировать на</FormLabel>
+                              <div className="flex gap-2">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        className={cn(
+                                          "flex-1 pl-3 text-left font-normal",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value ? (
+                                          format(field.value, "d MMMM yyyy, HH:mm", { locale: ru })
+                                        ) : (
+                                          <span>Выберите дату и время</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value || undefined}
+                                      onSelect={handleScheduleDateSelect}
+                                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                      initialFocus
+                                      className={cn("p-3 pointer-events-auto")}
+                                    />
+                                    <div className="border-t p-3 flex items-center gap-2">
+                                      <span className="text-sm text-muted-foreground">Время:</span>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={23}
+                                        value={field.value ? format(field.value, "HH") : "12"}
+                                        onChange={(e) => handleScheduleTimeChange('hours', e.target.value)}
+                                        className="w-16 text-center"
+                                        placeholder="ЧЧ"
+                                      />
+                                      <span>:</span>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={59}
+                                        value={field.value ? format(field.value, "mm") : "00"}
+                                        onChange={(e) => handleScheduleTimeChange('minutes', e.target.value)}
+                                        className="w-16 text-center"
+                                        placeholder="ММ"
+                                      />
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                                {field.value && (
+                                  <Button type="button" variant="ghost" size="icon" onClick={() => field.onChange(null)}>
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                              <FormDescription>
+                                Блог автоматически опубликуется в указанное время
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+
+                      {form.watch("scheduled_at") && (
+                        <FormField
+                          control={form.control}
+                          name="scheduled_crosspost"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Share2 className="h-4 w-4 text-muted-foreground" />
+                                <FormLabel className="cursor-pointer">Кросс-постинг при публикации</FormLabel>
+                              </div>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+                  )}
 
                   <FormField
                     control={form.control}
