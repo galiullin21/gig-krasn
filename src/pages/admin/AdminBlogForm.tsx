@@ -40,7 +40,7 @@ import { generateSlug } from "@/lib/transliterate";
 import { TagSelector } from "@/components/admin/TagSelector";
 import { useCrosspost } from "@/hooks/useCrosspost";
 
-const RichTextEditor = lazy(() => import("@/components/admin/RichTextEditor").then(m => ({ default: m.RichTextEditor })));
+const RichTextEditor = lazy(() => import("@/components/admin/RichTextEditor").then((m) => ({ default: m.RichTextEditor })));
 
 const blogSchema = z.object({
   title: z.string().min(1, "Введите заголовок").max(255),
